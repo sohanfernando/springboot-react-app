@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import axios from "axios";
+import { Link, useNavigate } from 'react-router-dom'
 
 const LoginPage = () => {
   const [email, setEmail] = useState('')
@@ -7,6 +8,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -14,17 +16,14 @@ const LoginPage = () => {
     setError("");
 
     try {
-      // Replace "/api/login" with your actual backend endpoint
       const response = await axios.post("http://localhost:8080/users/login", {
         email,
         password,
       });
 
-      // Handle successful login (e.g., redirect or store token)
       console.log("Login successful:", response.data);
       alert("Login successful! Redirecting...");
-      // Example: Redirect to dashboard
-      // window.location.href = "/dashboard";
+      navigate("/");
     } catch (err) {
       setError(
         err.response?.data?.message || "Login failed. Please try again."
@@ -118,12 +117,25 @@ const LoginPage = () => {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              Signing In...
+              Login...
             </span>
           ) : (
-            "Sign In"
+            "Login"
           )}
         </button>
+
+        {/* Sign Up Link */}
+        <div className='mt-6 text-center'>
+          <p className='text-sm text-gray-600'>
+            Don't have an account?{" "}
+            <Link
+              to="/signup"
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
       </form>
     </div>
   )

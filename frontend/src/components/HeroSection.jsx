@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Model1 from "../assets/T-shirts/Men/1.jpg"
 import Model2 from "../assets/T-shirts/Women/5.webp"
 import Model3 from "../assets/T-shirts/Men/7.webp"
@@ -28,9 +29,11 @@ const HeroSection = () => {
             <div className="absolute inset-0 bg-black bg-opacity-40" />
             <div className="absolute text-center">
               <h1 className="text-3xl md:text-5xl font-bold mb-4">FashionHub</h1>
-              <button className="bg-yellow-400 text-black font-semibold px-6 py-2 rounded hover:bg-yellow-300 transition">
-                SHOP NOW
-              </button>
+              <Link to="/latest">
+                <button className="bg-yellow-400 text-black font-semibold px-6 py-2 rounded hover:bg-yellow-300 transition">
+                  SHOP NOW
+                </button>
+              </Link>
             </div>
           </div>
 

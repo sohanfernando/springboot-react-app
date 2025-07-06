@@ -19,18 +19,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public GetUserResponseDto createUser(UserCreateRequestDto userCreateRequestDto){
+
+        String role = userCreateRequestDto.getRole();
+        if(role == null || role.trim().isEmpty()){
+            role = "USER";
+        } else if (!role.equals("USER") && !role.equals("ADMIN")) {
+            throw new RuntimeException("Invalid role. Role must be USER or ADMIN");
+        }
+
         User user = new User();
 
         user.setName(userCreateRequestDto.getName());
         user.setEmail(userCreateRequestDto.getEmail());
         user.setPassword(bCryptPasswordEncoder.encode(userCreateRequestDto.getPassword()));
+        user.setRole(role);
 
         userRepository.save(user);
 
         return new GetUserResponseDto(
                 user.getId(),
                 user.getName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getRole()
         );
     }
 
@@ -46,7 +56,8 @@ public class UserServiceImpl implements UserService {
         return new GetUserResponseDto(
                 user.getId(),
                 user.getName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getRole()
         );
     }
 }

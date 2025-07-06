@@ -19,6 +19,8 @@ public class SecurityConfig {
                 .csrf().disable() // disable CSRF for APIs (only for testing or frontend APIs)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/signup", "/users/login").permitAll() // allow public access
+                        .requestMatchers("/admin/**").hasRole("ADMIN") // Admin only
+                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated() // all other requests require authentication
                 );
         return http.build();

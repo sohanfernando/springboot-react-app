@@ -1,3 +1,106 @@
+@import 'swiper/css';
+@import 'swiper/css/navigation';
+@import 'swiper/css/pagination';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Push Swiper pagination dots downward */
+.swiper-pagination {
+  margin-top: 40px !important;
+  position: relative !important;
+}
+
+/* Custom Swiper Pagination Styles */
+.swiper-pagination-bullet {
+  width: 12px !important;
+  height: 12px !important;
+  background: rgba(255, 255, 255, 0.3) !important;
+  opacity: 1 !important;
+  transition: all 0.3s ease !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  transform: scale(1.2) !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important;
+}
+
+/* Section-specific pagination colors */
+.men-swiper .swiper-pagination-bullet-active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5) !important;
+}
+
+.women-swiper .swiper-pagination-bullet-active {
+  background: linear-gradient(135deg, #ec4899, #db2777) !important;
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.5) !important;
+}
+
+.accessories-swiper .swiper-pagination-bullet-active {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5) !important;
+}
+
+/* Custom Navigation Button Hover Effects */
+.swiper-button-prev-latest,
+.swiper-button-next-latest,
+.swiper-button-prev-men,
+.swiper-button-next-men,
+.swiper-button-prev-women,
+.swiper-button-next-women,
+.swiper-button-prev-accessories,
+.swiper-button-next-accessories {
+  transition: all 0.3s ease !important;
+}
+
+.swiper-button-prev-latest:hover,
+.swiper-button-next-latest:hover,
+.swiper-button-prev-men:hover,
+.swiper-button-next-men:hover,
+.swiper-button-prev-women:hover,
+.swiper-button-next-women:hover,
+.swiper-button-prev-accessories:hover,
+.swiper-button-next-accessories:hover {
+  transform: translateY(-50%) scale(1.1) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Smooth animations for section elements */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Glassmorphism effect for cards */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Gradient text animation */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}

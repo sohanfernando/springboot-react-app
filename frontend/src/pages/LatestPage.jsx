@@ -1,12 +1,12 @@
 import React from 'react'
 import Navbar from '../components/Navbar'
 
-const AccessoriesPage = () => {
+const LatestPage = () => {
   return (
     <div>
-      <Navbar />
+        <Navbar />
     </div>
   )
 }
 
-export default AccessoriesPage
+export default LatestPage

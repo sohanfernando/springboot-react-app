@@ -1,6 +1,14 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { FaRegHeart, FaRegEye, FaShoppingBag, FaHeart } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+
+const getImageUrl = (img) => {
+  if (!img) return '';
+  if (img.startsWith('http')) return img;
+  if (img.startsWith('/uploads/products/')) return `http://localhost:8080${img}`;
+  return `http://localhost:8080/uploads/products/${img}`;
+};
 
 const ProductCard = ({ image, title, price, color, availability, sizes, id }) => {
   const { 
@@ -40,14 +48,16 @@ const ProductCard = ({ image, title, price, color, availability, sizes, id }) =>
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer group">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full group">
       {/* Image Container */}
       <div className="relative p-3">
-        <img
-          src={image}
-          alt={title}
-          className="w-full h-[400px] object-cover rounded-md mx-auto group-hover:scale-105 transition-transform duration-300"
-        />
+        <Link to={`/product/${id}`} className="block">
+          <img
+            src={getImageUrl(image)}
+            alt={title}
+            className="w-full h-[400px] object-cover rounded-md mx-auto group-hover:scale-105 transition-transform duration-300"
+          />
+        </Link>
         
         {/* Wishlist Button */}
         <button 
@@ -64,9 +74,9 @@ const ProductCard = ({ image, title, price, color, availability, sizes, id }) =>
         {/* Quick Actions */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-lg">
-            <button className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors duration-200">
+            <Link to={`/product/${id}`} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors duration-200">
               <FaRegEye size={12} />
-            </button>
+            </Link>
             <button 
               onClick={handleAddToCart}
               disabled={availability === 'out-of-stock'}

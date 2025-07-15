@@ -27,7 +27,7 @@ export default function SignUpPage() {
         name,
         email,
         password,
-        role,
+        role: "USER",
       });
 
       console.log("Signup successful:", response.data);
@@ -36,13 +36,13 @@ export default function SignUpPage() {
       login(response.data);
       
       // Check the user's role and navigate accordingly
-      if (response.data.role === "ADMIN") {
-        alert("Admin account created! Redirecting to admin dashboard...");
-        navigate("/admin");
-      } else {
+      // if (response.data.role === "ADMIN") {
+      //   alert("Admin account created! Redirecting to admin dashboard...");
+      //   navigate("/admin");
+      // } else {
         alert("Account created! Redirecting to home...");
         navigate("/");
-      }
+      // }
     } catch (err) {
       setError(
         err.response?.data?.message || "Signup failed. Please try again."
@@ -147,6 +147,7 @@ export default function SignUpPage() {
                   </div>
 
                   {/* Role Selection */}
+                  {/*
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
                       <FaCrown />
@@ -166,6 +167,7 @@ export default function SignUpPage() {
                       </svg>
                     </div>
                   </div>
+                  */}
 
                   {/* Terms and Conditions */}
                   <div className="flex items-start space-x-3">

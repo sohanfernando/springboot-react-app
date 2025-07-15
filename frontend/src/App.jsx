@@ -9,6 +9,14 @@ import WomenPage from './pages/WomenPage'
 import AccessoriesPage from './pages/AccessoriesPage'
 import LatestPage from './pages/LatestPage'
 import AboutUsPage from './pages/AboutUsPage'
+import SearchPage from './pages/SearchPage'
+import CartPage from './pages/CartPage'
+import WishlistPage from './pages/WishlistPage'
+import ProductDetailPage from './pages/ProductDetailPage'
+import ProfilePage from './pages/ProfilePage'
+import OrdersPage from './pages/OrdersPage'
+import AdminSignupPage from './pages/AdminSignupPage';
+import AdminLoginPage from './pages/AdminLoginPage';
 
 const App = () => {
   return (
@@ -23,6 +31,14 @@ const App = () => {
         <Route path='/accessories' element={<AccessoriesPage />} />
         <Route path='/latest' element={<LatestPage />} />
         <Route path="/aboutus" element={<AboutUsPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/product/:productId" element={<ProductDetailPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/admin-signup" element={<AdminSignupPage />} />
+        <Route path="/admin-login" element={<AdminLoginPage />} />
       </Routes>
     </div>
   )

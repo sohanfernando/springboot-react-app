@@ -1,33 +1,33 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import AdminProductManager from '../components/AdminProductManager';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminHomePage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!user || user.role !== 'ADMIN') {
+      navigate('/admin-login');
+    }
+  }, [user, navigate]);
+
+  if (!user || user.role !== 'ADMIN') {
+    return null; // Optionally show a spinner or nothing while redirecting
+  }
+
   return (
     <div className='bg-zinc-950'>
       <Navbar />
-      
       {/* Admin Welcome Section */}
-      <div className="w-full flex justify-center py-6 m-auto">
-        <div className="w-[95%] h-[60vh] bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-3xl overflow-hidden flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">Admin Dashboard</h1>
-            <p className="text-xl mb-8">Welcome to FashionHub Administration</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                Manage Products
-              </button>
-              <button className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                View Orders
-              </button>
-              <button className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                User Management
-              </button>
-            </div>
-          </div>
+      <div className="w-full flex justify-center py-6 m-auto pt-32">
+        <div className="w-[95%] min-h-[60vh] bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-3xl overflow-hidden flex items-center justify-center">
+          <AdminProductManager />
         </div>
       </div>
-
       {/* Admin Stats Section */}
       <section className="w-full my-10 px-6">
         <div className="max-w-6xl mx-auto">
@@ -51,7 +51,6 @@ const AdminHomePage = () => {
           </div>
         </div>
       </section>
-
       {/* Quick Actions */}
       <section className="w-full my-10 px-6">
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
@@ -76,7 +75,6 @@ const AdminHomePage = () => {
           </div>
         </div>
       </section>
-
       <Footer />
     </div>
   );

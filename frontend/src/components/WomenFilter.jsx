@@ -9,8 +9,16 @@ const WomenFilter = ({
   clearFilters,
   colors = ['black', 'blue', 'white', 'red', 'pink', 'purple'],
   sizes = ['XS', 'S', 'M', 'L', 'XL'],
-  categories = ['Crop Tops', 'Dresses', 'Joggers & Pants', 'Shorts', 'Sports Bra']
+  categories = ['Crop Tops', 'Dresses', 'Joggers & Pants', 'Shorts', 'Sports Bra', 'T-Shirts']
 }) => {
+  // Defensive: ensure filters.sizes, filters.colors, filters.categories are arrays
+  const safeFilters = {
+    ...filters,
+    sizes: Array.isArray(filters.sizes) ? filters.sizes : [],
+    colors: Array.isArray(filters.colors) ? filters.colors : [],
+    categories: Array.isArray(filters.categories) ? filters.categories : [],
+  };
+
   const handleSizeChange = (size) => {
     setFilters(prev => ({
       ...prev,
@@ -59,7 +67,7 @@ const WomenFilter = ({
               <label key={category} className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={filters.categories.includes(category)}
+                  checked={safeFilters.categories.includes(category)}
                   onChange={() => handleCategoryChange(category)}
                   className="mr-2"
                 />
@@ -124,7 +132,7 @@ const WomenFilter = ({
                 key={size}
                 onClick={() => handleSizeChange(size)}
                 className={`px-3 py-2 text-sm border rounded-md transition-colors ${
-                  filters.sizes.includes(size)
+                  safeFilters.sizes.includes(size)
                     ? 'bg-red-500 text-white border-red-500'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-red-300'
                 }`}
@@ -144,7 +152,7 @@ const WomenFilter = ({
                 key={color}
                 onClick={() => handleColorChange(color)}
                 className={`px-3 py-2 text-sm border rounded-md transition-colors capitalize ${
-                  filters.colors.includes(color)
+                  safeFilters.colors.includes(color)
                     ? 'bg-red-500 text-white border-red-500'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-red-300'
                 }`}

@@ -1,24 +1,16 @@
 import React from 'react';
 import { FaFilter } from 'react-icons/fa';
 
-const MenFilter = ({ 
+const LatestFilter = ({ 
   filters, 
   setFilters, 
   showFilters, 
   setShowFilters, 
   clearFilters,
-  colors = ['black', 'blue', 'white', 'red'],
-  sizes = ['S', 'M', 'L'],
-  categories = ['T-Shirts', 'Shirts', 'Shorts', 'Joggers & Pants']
+  colors = ['black', 'blue', 'white', 'red', 'gray', 'brown', 'pink', 'purple'],
+  sizes = ['XS', 'S', 'M', 'L', 'XL', 'One Size'],
+  categories = ['Men', 'Women', 'Accessories']
 }) => {
-  // Defensive: ensure filters.sizes, filters.colors, filters.categories are arrays
-  const safeFilters = {
-    ...filters,
-    sizes: Array.isArray(filters.sizes) ? filters.sizes : [],
-    colors: Array.isArray(filters.colors) ? filters.colors : [],
-    categories: Array.isArray(filters.categories) ? filters.categories : [],
-  };
-
   const handleSizeChange = (size) => {
     setFilters(prev => ({
       ...prev,
@@ -67,7 +59,7 @@ const MenFilter = ({
               <label key={category} className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={safeFilters.categories.includes(category)}
+                  checked={filters.categories.includes(category)}
                   onChange={() => handleCategoryChange(category)}
                   className="mr-2"
                 />
@@ -108,7 +100,7 @@ const MenFilter = ({
             <input
               type="range"
               min="0"
-              max="200"
+              max="10000"
               value={filters.priceRange[1]}
               onChange={(e) => setFilters(prev => ({ 
                 ...prev, 
@@ -117,8 +109,8 @@ const MenFilter = ({
               className="w-full mb-2"
             />
             <div className="flex justify-between text-sm text-gray-600">
-              <span>${filters.priceRange[0]}</span>
-              <span>${filters.priceRange[1]}</span>
+              <span>Rs {filters.priceRange[0].toLocaleString()}</span>
+              <span>Rs {filters.priceRange[1].toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -126,13 +118,13 @@ const MenFilter = ({
         {/* Size Filter */}
         <div className="mb-6">
           <h3 className="font-medium text-gray-900 mb-3">Size</h3>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {sizes.map(size => (
               <button
                 key={size}
                 onClick={() => handleSizeChange(size)}
                 className={`px-3 py-2 text-sm border rounded-md transition-colors ${
-                  safeFilters.sizes.includes(size)
+                  filters.sizes.includes(size)
                     ? 'bg-red-500 text-white border-red-500'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-red-300'
                 }`}
@@ -152,7 +144,7 @@ const MenFilter = ({
                 key={color}
                 onClick={() => handleColorChange(color)}
                 className={`px-3 py-2 text-sm border rounded-md transition-colors capitalize ${
-                  safeFilters.colors.includes(color)
+                  filters.colors.includes(color)
                     ? 'bg-red-500 text-white border-red-500'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-red-300'
                 }`}
@@ -181,4 +173,4 @@ const MenFilter = ({
   );
 };
 
-export default MenFilter; 
+export default LatestFilter; 

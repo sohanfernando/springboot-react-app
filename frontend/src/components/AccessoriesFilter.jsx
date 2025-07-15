@@ -11,6 +11,15 @@ const AccessoriesFilter = ({
   sizes = ['S', 'M', 'L', 'One Size'],
   categories = ['Bags', 'Hats', 'Slides', 'Bottle']
 }) => {
+  const {
+    categories: selectedCategories = [],
+    sizes: selectedSizes = [],
+    colors: selectedColors = [],
+    priceRange = [0, 200],
+    sortBy = "default",
+    availability = "all"
+  } = filters || {};
+
   const handleSizeChange = (size) => {
     setFilters(prev => ({
       ...prev,
@@ -59,7 +68,7 @@ const AccessoriesFilter = ({
               <label key={category} className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={filters.categories.includes(category)}
+                  checked={selectedCategories.includes(category)}
                   onChange={() => handleCategoryChange(category)}
                   className="mr-2"
                 />
@@ -83,7 +92,7 @@ const AccessoriesFilter = ({
                   type="radio"
                   name="availability"
                   value={option.value}
-                  checked={filters.availability === option.value}
+                  checked={availability === option.value}
                   onChange={(e) => setFilters(prev => ({ ...prev, availability: e.target.value }))}
                   className="mr-2"
                 />
@@ -101,7 +110,7 @@ const AccessoriesFilter = ({
               type="range"
               min="0"
               max="200"
-              value={filters.priceRange[1]}
+              value={priceRange[1]}
               onChange={(e) => setFilters(prev => ({ 
                 ...prev, 
                 priceRange: [prev.priceRange[0], parseInt(e.target.value)] 
@@ -109,8 +118,8 @@ const AccessoriesFilter = ({
               className="w-full mb-2"
             />
             <div className="flex justify-between text-sm text-gray-600">
-              <span>${filters.priceRange[0]}</span>
-              <span>${filters.priceRange[1]}</span>
+              <span>${priceRange[0]}</span>
+              <span>${priceRange[1]}</span>
             </div>
           </div>
         </div>
@@ -124,7 +133,7 @@ const AccessoriesFilter = ({
                 key={size}
                 onClick={() => handleSizeChange(size)}
                 className={`px-3 py-2 text-sm border rounded-md transition-colors ${
-                  filters.sizes.includes(size)
+                  selectedSizes.includes(size)
                     ? 'bg-red-500 text-white border-red-500'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-red-300'
                 }`}
@@ -144,7 +153,7 @@ const AccessoriesFilter = ({
                 key={color}
                 onClick={() => handleColorChange(color)}
                 className={`px-3 py-2 text-sm border rounded-md transition-colors capitalize ${
-                  filters.colors.includes(color)
+                  selectedColors.includes(color)
                     ? 'bg-red-500 text-white border-red-500'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-red-300'
                 }`}
@@ -159,7 +168,7 @@ const AccessoriesFilter = ({
         <div className="mb-6">
           <h3 className="font-medium text-gray-900 mb-3">Sort By</h3>
           <select
-            value={filters.sortBy}
+            value={sortBy}
             onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-300"
           >

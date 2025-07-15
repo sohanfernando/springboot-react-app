@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
@@ -7,28 +7,26 @@ import { Link } from 'react-router-dom';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-
-import img1 from '../assets/T-shirts/Women/6.webp';
-import img2 from '../assets/T-shirts/Women/1.webp';
-import img3 from '../assets/T-shirts/Women/3.webp';
-import img4 from '../assets/Sports bra/1.webp';
-import img5 from '../assets/Crop tops/1.webp';
-import img6 from '../assets/Sports bra/3.webp';
-import img7 from '../assets/Shorts/Women/1.webp';
-import img8 from '../assets/T-shirts/Women/5.webp';
-
-const products = [
-  { id: 'women-1', image: img1, title: 'Striped Tee', price: 'Rs 4,750', category: 'T-Shirts' },
-  { id: 'women-2', image: img2, title: 'Classic V-Neck Tee', price: 'Rs 3,200', category: 'T-Shirts' },
-  { id: 'women-3', image: img3, title: 'Graphic Print Tee', price: 'Rs 5,300', category: 'T-Shirts' },
-  { id: 'women-4', image: img4, title: 'High-Impact Sports Bra', price: 'Rs 4,800', category: 'Sports Bra' },
-  { id: 'women-5', image: img5, title: 'Ribbed Crop Top', price: 'Rs 2,900', category: 'Crop Tops' },
-  { id: 'women-6', image: img6, title: 'Low-Impact Sports Bra', price: 'Rs 4,200', category: 'Sports Bra' },
-  { id: 'women-7', image: img7, title: 'High-Waist Shorts', price: 'Rs 3,900', category: 'Shorts' },
-  { id: 'women-8', image: img8, title: 'Oversized Tee', price: 'Rs 3,000', category: 'T-Shirts' },
-];
+import axios from 'axios';
 
 const WomenSection = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get('/admin/products/category/Women');
+        setProducts(Array.isArray(res.data) ? res.data : []);
+      } catch (e) {
+        setProducts([]);
+      }
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
+
   return (
     <section className="relative py-16 bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
       {/* Background Pattern */}
@@ -37,7 +35,6 @@ const WomenSection = () => {
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}></div>
       </div>
-
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -47,81 +44,80 @@ const WomenSection = () => {
             </div>
             <span className="text-pink-400 text-sm font-semibold uppercase tracking-wider">Women's Collection</span>
           </div>
-          
           <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
             Women's
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-600"> Style</span>
           </h2>
-          
           <p className="text-gray-300 text-lg max-w-2xl mx-auto">
             Embrace your strength with our empowering women's collection designed for confidence and performance
           </p>
         </div>
-
         {/* Products Carousel */}
         <div className="relative">
-          <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
-            spaceBetween={24}
-            slidesPerView={1}
-            navigation={{
-              nextEl: '.swiper-button-next-women',
-              prevEl: '.swiper-button-prev-women',
-            }}
-            pagination={{ 
-              clickable: true,
-              el: '.swiper-pagination-women',
-              bulletClass: 'swiper-pagination-bullet',
-              bulletActiveClass: 'swiper-pagination-bullet-active'
-            }}
-            autoplay={{
-              delay: 4500,
-              disableOnInteraction: false,
-            }}
-            loop={true}
-            breakpoints={{
-              640: { slidesPerView: 2, spaceBetween: 20 },
-              768: { slidesPerView: 3, spaceBetween: 24 },
-              1024: { slidesPerView: 4, spaceBetween: 24 },
-            }}
-            className="women-swiper"
-          >
-            {products.map((product, index) => (
-              <SwiperSlide key={index} className="pb-12">
-                <div className="group">
-                  <ProductCard
-                    id={product.id}
-                    image={product.image}
-                    title={product.title}
-                    price={product.price}
-                  />
-                  <div className="mt-2 text-center">
-                    <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
-                      {product.category}
-                    </span>
+          {loading ? (
+            <div className="text-center text-white py-12">Loading products...</div>
+          ) : products.length === 0 ? (
+            <div className="text-center text-white py-12">No women's products found.</div>
+          ) : (
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              spaceBetween={24}
+              slidesPerView={1}
+              navigation={{
+                nextEl: '.swiper-button-next-women',
+                prevEl: '.swiper-button-prev-women',
+              }}
+              pagination={{ 
+                clickable: true,
+                el: '.swiper-pagination-women',
+                bulletClass: 'swiper-pagination-bullet',
+                bulletActiveClass: 'swiper-pagination-bullet-active'
+              }}
+              autoplay={{
+                delay: 4500,
+                disableOnInteraction: false,
+              }}
+              loop={true}
+              breakpoints={{
+                640: { slidesPerView: 2, spaceBetween: 20 },
+                768: { slidesPerView: 3, spaceBetween: 24 },
+                1024: { slidesPerView: 4, spaceBetween: 24 },
+              }}
+              className="women-swiper"
+            >
+              {products.map((product, index) => (
+                <SwiperSlide key={product.id || index} className="pb-12">
+                  <div className="group">
+                    <ProductCard
+                      id={product.id}
+                      image={product.images && product.images[0]}
+                      title={product.name}
+                      price={`Rs ${product.price}`}
+                    />
+                    <div className="mt-2 text-center">
+                      <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
+                        {product.subcategory}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          )}
           {/* Custom Navigation Buttons */}
           <button className="swiper-button-prev-women absolute left-4 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          
           <button className="swiper-button-next-women absolute right-4 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
-
           {/* Custom Pagination */}
           <div className="swiper-pagination-women flex justify-center mt-8 space-x-2"></div>
         </div>
-
         {/* View All Button */}
         <div className="text-center mt-12">
           <Link
@@ -133,7 +129,6 @@ const WomenSection = () => {
           </Link>
         </div>
       </div>
-
       {/* Decorative Elements */}
       <div className="absolute top-20 left-10 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 right-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>

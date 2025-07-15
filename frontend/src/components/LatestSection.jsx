@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
@@ -7,28 +7,34 @@ import { Link } from 'react-router-dom';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-
-import img1 from '../assets/Shirts/6.webp';
-import img2 from '../assets/T-shirts/Women/1.webp';
-import img3 from '../assets/T-shirts/Women/3.webp';
-import img4 from '../assets/Shirts/13.webp';
-import img5 from '../assets/Crop tops/1.webp';
-import img6 from '../assets/T-shirts/Men/19.webp';
-import img7 from '../assets/Joggers & Pants/Women/1.webp';
-import img8 from '../assets/T-shirts/Women/5.webp';
-
-const products = [
-  { id: 'latest-1', image: img1, title: 'Premium Oxford Shirt', price: 'Rs 4,750', category: 'Shirts' },
-  { id: 'latest-2', image: img2, title: 'Classic V-Neck Tee', price: 'Rs 3,200', category: 'T-Shirts' },
-  { id: 'latest-3', image: img3, title: 'Graphic Print Tee', price: 'Rs 5,300', category: 'T-Shirts' },
-  { id: 'latest-4', image: img4, title: 'Long Sleeve Shirt', price: 'Rs 4,800', category: 'Shirts' },
-  { id: 'latest-5', image: img5, title: 'Ribbed Crop Top', price: 'Rs 2,900', category: 'Crop Tops' },
-  { id: 'latest-6', image: img6, title: 'Oversized Tee', price: 'Rs 4,200', category: 'T-Shirts' },
-  { id: 'latest-7', image: img7, title: 'High-Waist Joggers', price: 'Rs 3,900', category: 'Joggers' },
-  { id: 'latest-8', image: img8, title: 'Basic Crew Tee', price: 'Rs 3,000', category: 'T-Shirts' },
-];
+import axios from 'axios';
 
 const LatestSection = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get('/admin/products');
+        // Filter products added in the last 7 days
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const latest = (Array.isArray(res.data) ? res.data : []).filter(p => {
+          if (!p.createdAt) return false;
+          const created = new Date(p.createdAt);
+          return created >= weekAgo && created <= now;
+        });
+        setProducts(latest);
+      } catch (e) {
+        setProducts([]);
+      }
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
+
   return (
     <section className="relative py-16 bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
       {/* Background Pattern */}
@@ -60,50 +66,56 @@ const LatestSection = () => {
 
         {/* Products Carousel */}
         <div className="relative">
-          <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
-            spaceBetween={24}
-            slidesPerView={1}
-            navigation={{
-              nextEl: '.swiper-button-next-latest',
-              prevEl: '.swiper-button-prev-latest',
-            }}
-            pagination={{ 
-              clickable: true,
-              el: '.swiper-pagination-latest',
-              bulletClass: 'swiper-pagination-bullet',
-              bulletActiveClass: 'swiper-pagination-bullet-active'
-            }}
-            autoplay={{
-              delay: 3000,
-              disableOnInteraction: false,
-            }}
-            loop={true}
-            breakpoints={{
-              640: { slidesPerView: 2, spaceBetween: 20 },
-              768: { slidesPerView: 3, spaceBetween: 24 },
-              1024: { slidesPerView: 4, spaceBetween: 24 },
-            }}
-            className="latest-swiper"
-          >
-            {products.map((product, index) => (
-              <SwiperSlide key={index} className="pb-12">
-                <div className="group">
-                  <ProductCard
-                    id={product.id}
-                    image={product.image}
-                    title={product.title}
-                    price={product.price}
-                  />
-                  <div className="mt-2 text-center">
-                    <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
-                      {product.category}
-                    </span>
+          {loading ? (
+            <div className="text-center text-white py-12">Loading latest products...</div>
+          ) : products.length === 0 ? (
+            <div className="text-center text-white py-12">No new products this week.</div>
+          ) : (
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              spaceBetween={24}
+              slidesPerView={1}
+              navigation={{
+                nextEl: '.swiper-button-next-latest',
+                prevEl: '.swiper-button-prev-latest',
+              }}
+              pagination={{ 
+                clickable: true,
+                el: '.swiper-pagination-latest',
+                bulletClass: 'swiper-pagination-bullet',
+                bulletActiveClass: 'swiper-pagination-bullet-active'
+              }}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+              }}
+              loop={true}
+              breakpoints={{
+                640: { slidesPerView: 2, spaceBetween: 20 },
+                768: { slidesPerView: 3, spaceBetween: 24 },
+                1024: { slidesPerView: 4, spaceBetween: 24 },
+              }}
+              className="latest-swiper"
+            >
+              {products.map((product, index) => (
+                <SwiperSlide key={product.id || index} className="pb-12">
+                  <div className="group">
+                    <ProductCard
+                      id={product.id}
+                      image={product.images && product.images[0]}
+                      title={product.name}
+                      price={`Rs ${product.price}`}
+                    />
+                    <div className="mt-2 text-center">
+                      <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
+                        {product.category} / {product.subcategory}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          )}
 
           {/* Custom Navigation Buttons */}
           <button className="swiper-button-prev-latest absolute left-4 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300">

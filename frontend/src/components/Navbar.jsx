@@ -8,6 +8,7 @@ const Navbar = () => {
   const [profileDropdown, setProfileDropdown] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { 
     user, 
     logout, 
@@ -21,7 +22,7 @@ const Navbar = () => {
 
   const categories = {
     MEN: ['Shop All', 'T-Shirts', 'Shirts', 'Shorts', 'Joggers & Pants'],
-    WOMEN: ['Shop All', 'Crop Tops', 'Dresses', 'Joggers & Pants', 'Shorts', 'Sports Bra'],
+    WOMEN: ['Shop All', 'T-Shirts', 'Crop Tops', 'Dresses', 'Joggers & Pants', 'Shorts', 'Sports Bra'],
     ACCESSORIES: ['Shop All', 'Bags', 'Hats', 'Slides', 'Bottles'],
   };
 
@@ -77,6 +78,15 @@ const Navbar = () => {
     logout();
     navigate('/login');
     setProfileDropdown(false);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to search results page or filter current page
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
   };
 
   const isActive = (path) => {
@@ -183,40 +193,45 @@ const Navbar = () => {
 
             {/* Search Bar */}
             <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
-              <div className="relative w-full">
+              <form onSubmit={handleSearch} className="relative w-full">
                 <input
                   type="text"
                   placeholder="Search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 rounded-full bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
                 />
                 <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all duration-200">
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all duration-200"
+                >
                   <FaSearch size={12} />
                 </button>
-              </div>
+              </form>
             </div>
 
             {/* Right Side Actions */}
             <div className="flex items-center space-x-4">
               {/* Wishlist */}
-              <button className="relative p-2 text-gray-700 hover:text-red-600 transition-all duration-200">
+              <Link to="/wishlist" className="relative p-2 text-gray-700 hover:text-red-600 transition-all duration-200">
                 <FaHeart size={20} />
                 {getWishlistCount() > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {getWishlistCount()}
                   </span>
                 )}
-              </button>
+              </Link>
 
               {/* Cart */}
-              <button className="relative p-2 text-gray-700 hover:text-red-600 transition-all duration-200">
+              <Link to="/cart" className="relative p-2 text-gray-700 hover:text-red-600 transition-all duration-200">
                 <FaShoppingCart size={20} />
                 {getCartCount() > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {getCartCount()}
                   </span>
                 )}
-              </button>
+              </Link>
 
               {/* Authentication */}
               {user ? (
@@ -310,14 +325,22 @@ const Navbar = () => {
           <div className="px-4 py-4">
             {/* Mobile Search */}
             <div className="mb-6">
-              <div className="relative">
+              <form onSubmit={handleSearch} className="relative">
                 <input
                   type="text"
                   placeholder="Search for products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 rounded-full bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
                 <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              </div>
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all duration-200"
+                >
+                  <FaSearch size={12} />
+                </button>
+              </form>
             </div>
 
             {/* Mobile Navigation */}

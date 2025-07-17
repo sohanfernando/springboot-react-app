@@ -154,12 +154,12 @@ const AdminLoginPage = () => {
                 </form>
                 <div className='text-center'>
                   <p className='text-gray-600'>
-                    Not an admin?{" "}
+                    Don't have an account?{" "}
                     <Link
-                      to="/login"
+                      to="/admin-signup"
                       className="text-red-600 hover:text-red-700 font-semibold transition-colors"
                     >
-                      Go to user login
+                      Create admin
                     </Link>
                   </p>
                 </div>

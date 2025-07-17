@@ -57,6 +57,10 @@ function AdminProductManager() {
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'description') {
+      const words = value.split(/\s+/).filter(Boolean);
+      if (words.length > 200) return;
+    }
     setForm((f) => ({ ...f, [name]: value }));
   };
 
@@ -281,6 +285,9 @@ function AdminProductManager() {
               <div className="mb-3">
                 <label className="block font-semibold mb-1">Description</label>
                 <textarea name="description" value={form.description} onChange={handleFormChange} className="w-full border rounded px-3 py-2" required />
+                <div className="text-xs text-gray-500 mt-1 text-right">
+                  {form.description.split(/\s+/).filter(Boolean).length} / 200 words
+                </div>
               </div>
               <div className="mb-3">
                 <label className="block font-semibold mb-1">Price (Rs)</label>

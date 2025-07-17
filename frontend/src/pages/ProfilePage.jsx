@@ -4,9 +4,10 @@ import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaSave, FaTimes } 
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import axios from 'axios';
 
 const ProfilePage = () => {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -25,11 +26,14 @@ const ProfilePage = () => {
     }));
   };
 
-  const handleSave = () => {
-    // In a real app, this would make an API call to update the user profile
-    console.log('Saving profile:', formData);
-    setIsEditing(false);
-    // You would typically update the user context here
+  const handleSave = async () => {
+    try {
+      const res = await axios.patch(`http://localhost:8080/users/${user.id}`, formData);
+      login(res.data); // update user context and localStorage
+      setIsEditing(false);
+    } catch (e) {
+      alert('Failed to update profile.');
+    }
   };
 
   const handleCancel = () => {

@@ -1,44 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaBox, FaTruck, FaCheckCircle, FaClock, FaEye } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import axios from 'axios';
 
 const OrdersPage = () => {
   const { user } = useAuth();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock order data - in real app this would come from API
-  const orders = [
-    {
-      id: 'ORD-001',
-      date: '2024-01-15',
-      status: 'delivered',
-      total: 8997,
-      items: [
-        { name: 'Premium Cotton T-Shirt', quantity: 2, price: 2999 },
-        { name: 'Classic Oxford Shirt', quantity: 1, price: 2999 }
-      ]
-    },
-    {
-      id: 'ORD-002',
-      date: '2024-01-10',
-      status: 'shipped',
-      total: 5998,
-      items: [
-        { name: 'Women\'s Classic T-Shirt', quantity: 2, price: 2999 }
-      ]
-    },
-    {
-      id: 'ORD-003',
-      date: '2024-01-05',
-      status: 'processing',
-      total: 3999,
-      items: [
-        { name: 'Athletic Shorts', quantity: 1, price: 3999 }
-      ]
-    }
-  ];
+  useEffect(() => {
+    if (!user) return;
+    const fetchOrders = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get('http://localhost:8080/api/orders');
+        // Filter orders for this user
+        const userOrders = Array.isArray(res.data)
+          ? res.data.filter(order => order.userId === user.id)
+          : [];
+        setOrders(userOrders);
+      } catch (e) {
+        setOrders([]);
+      }
+      setLoading(false);
+    };
+    fetchOrders();
+  }, [user]);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -46,6 +36,8 @@ const OrdersPage = () => {
         return <FaCheckCircle className="text-green-500" />;
       case 'shipped':
         return <FaTruck className="text-blue-500" />;
+      case 'confirmed':
+        return <FaCheckCircle className="text-blue-500" />;
       case 'processing':
         return <FaClock className="text-yellow-500" />;
       default:
@@ -59,6 +51,8 @@ const OrdersPage = () => {
         return 'Delivered';
       case 'shipped':
         return 'Shipped';
+      case 'confirmed':
+        return 'Order Confirmed';
       case 'processing':
         return 'Processing';
       default:
@@ -71,6 +65,8 @@ const OrdersPage = () => {
       case 'delivered':
         return 'text-green-600 bg-green-100';
       case 'shipped':
+        return 'text-blue-600 bg-blue-100';
+      case 'confirmed':
         return 'text-blue-600 bg-blue-100';
       case 'processing':
         return 'text-yellow-600 bg-yellow-100';
@@ -110,7 +106,9 @@ const OrdersPage = () => {
             <p className="text-gray-600">Track your order history and current orders</p>
           </div>
 
-          {orders.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16 text-gray-500">Loading orders...</div>
+          ) : orders.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FaBox className="text-gray-400 text-3xl" />
@@ -133,7 +131,7 @@ const OrdersPage = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-800">Order {order.id}</h3>
-                        <p className="text-gray-600">Placed on {new Date(order.date).toLocaleDateString()}</p>
+                        {/* <p className="text-gray-600">Placed on {new Date(order.date).toLocaleDateString()}</p> */}
                       </div>
                       <div className="flex items-center gap-4">
                         <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
@@ -148,28 +146,26 @@ const OrdersPage = () => {
                   {/* Order Items */}
                   <div className="p-6">
                     <div className="space-y-4">
-                      {order.items.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between py-2">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <FaBox className="text-gray-400" />
+                      {(() => {
+                        let items = order.items;
+                        if (typeof items === 'string') {
+                          try { items = JSON.parse(items); } catch { items = []; }
+                        }
+                        return Array.isArray(items) ? items.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between py-2">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <FaBox className="text-gray-400" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-800">{item.title || item.name}</h4>
+                                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium text-gray-800">{item.name}</h4>
-                              <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                            </div>
+                            <span className="font-medium text-gray-800">Rs {item.price}</span>
                           </div>
-                          <span className="font-medium text-gray-800">Rs {item.price}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Order Actions */}
-                    <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
-                      <button className="flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors">
-                        <FaEye />
-                        View Details
-                      </button>
+                        )) : null;
+                      })()}
                     </div>
                   </div>
                 </div>

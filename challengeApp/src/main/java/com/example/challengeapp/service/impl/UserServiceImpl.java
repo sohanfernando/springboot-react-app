@@ -10,6 +10,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Service
 @AllArgsConstructor
@@ -59,5 +62,19 @@ public class UserServiceImpl implements UserService {
                 user.getEmail(),
                 user.getRole()
         );
+    }
+
+    public List<GetUserResponseDto> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        List<GetUserResponseDto> result = new ArrayList<>();
+        for (User user : users) {
+            result.add(new GetUserResponseDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole()
+            ));
+        }
+        return result;
     }
 }

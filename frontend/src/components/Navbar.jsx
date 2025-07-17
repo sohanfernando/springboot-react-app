@@ -13,7 +13,9 @@ const Navbar = () => {
     user, 
     logout, 
     getCartCount, 
-    getWishlistCount 
+    getWishlistCount, 
+    admin, 
+    logoutAdmin 
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -92,6 +94,9 @@ const Navbar = () => {
   const isActive = (path) => {
     return location.pathname === path;
   };
+
+  // Determine if current route is admin
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -234,7 +239,21 @@ const Navbar = () => {
               </Link>
 
               {/* Authentication */}
-              {user ? (
+              {isAdminRoute && admin ? (
+                <div className="relative flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center">
+                    <FaUser size={14} className="text-white" />
+                  </div>
+                  <span className="hidden sm:block text-sm font-medium text-gray-700">{admin.name}</span>
+                  <span className="hidden sm:block text-xs text-gray-500 bg-blue-100 rounded px-2 py-1 ml-1">{admin.email}</span>
+                  <button
+                    onClick={() => { logoutAdmin(); window.location.href = '/admin-login'; }}
+                    className="flex items-center gap-2 text-red-600 hover:text-red-700 px-3 py-1 rounded-lg font-semibold border border-red-200 ml-3"
+                  >
+                    <FaSignOutAlt /> Logout
+                  </button>
+                </div>
+              ) : !isAdminRoute && user ? (
                 <div className="relative" ref={profileRef}>
                   <button 
                     onClick={() => setProfileDropdown(!profileDropdown)}
@@ -245,7 +264,6 @@ const Navbar = () => {
                     </div>
                     <span className="hidden sm:block text-sm font-medium text-gray-700">{user.name}</span>
                   </button>
-                  
                   {profileDropdown && (
                     <div className="absolute right-0 mt-2 w-64 bg-white shadow-xl rounded-xl py-3 z-50 border border-gray-100">
                       <div className="px-4 py-3 border-b border-gray-100">
@@ -287,7 +305,7 @@ const Navbar = () => {
                     </div>
                   )}
                 </div>
-              ) : (
+              ) : !isAdminRoute && (
                 <div className="hidden sm:flex items-center space-x-3">
                   <Link
                     to="/login"

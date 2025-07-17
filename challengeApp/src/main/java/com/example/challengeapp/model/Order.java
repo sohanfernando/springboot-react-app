@@ -20,4 +20,11 @@ public class Order {
     @Lob
     private String items; // Store cart items as JSON string
     private Double total;
+
+    private String recipientName;
+    private String address;
+    private String city;
+    private String postalCode;
+
+    private String status = "processing";
 }

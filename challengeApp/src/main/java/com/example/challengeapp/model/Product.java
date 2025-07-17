@@ -19,6 +19,7 @@ public class Product {
     private Long id;
 
     private String name;
+    @Column(columnDefinition = "TEXT")
     private String description;
     private Double price;
     private String category; // Men, Women, Accessories

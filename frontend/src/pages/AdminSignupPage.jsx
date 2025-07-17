@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import AdminNavbar from '../components/AdminNavbar';
 import { useAuth } from '../context/AuthContext';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaCrown } from 'react-icons/fa';
 import signupImage from '../assets/T-shirts/Men/10.webp';
@@ -41,7 +41,7 @@ export default function AdminSignupPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+      <AdminNavbar />
       <div className="flex-grow flex items-center justify-center p-4 pt-32">
         <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden">
           <div className="flex flex-col lg:flex-row">

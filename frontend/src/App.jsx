@@ -17,6 +17,10 @@ import ProfilePage from './pages/ProfilePage'
 import OrdersPage from './pages/OrdersPage'
 import AdminSignupPage from './pages/AdminSignupPage';
 import AdminLoginPage from './pages/AdminLoginPage';
+import OrderConfirmationPage from './pages/OrderConfirmationPage';
+import PaymentPage from './pages/PaymentPage';
+import AdminOrdersPage from './pages/AdminOrdersPage';
+import AdminUsersPage from './pages/AdminUsersPage';
 
 const App = () => {
   return (
@@ -39,6 +43,10 @@ const App = () => {
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/admin-signup" element={<AdminSignupPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
+        <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/users" element={<AdminUsersPage />} />
       </Routes>
     </div>
   )

@@ -28,6 +28,12 @@ public class ProductServiceImpl implements ProductService {
         if (images == null || images.size() < 1 || images.size() > 5) {
             throw new RuntimeException("Product must have between 1 and 5 images.");
         }
+        if (product.getDescription() != null) {
+            int wordCount = product.getDescription().trim().split("\\s+").length;
+            if (wordCount > 200) {
+                throw new RuntimeException("Description cannot exceed 200 words.");
+            }
+        }
         List<String> imageUrls = saveImages(images);
         product.setImages(imageUrls);
         product.setColors(product.getColors());
@@ -52,6 +58,12 @@ public class ProductServiceImpl implements ProductService {
             product.getImages().addAll(imageUrls);
             if (product.getImages().size() > 5) {
                 throw new RuntimeException("Product can have at most 5 images.");
+            }
+        }
+        if (updated.getDescription() != null) {
+            int wordCount = updated.getDescription().trim().split("\\s+").length;
+            if (wordCount > 200) {
+                throw new RuntimeException("Description cannot exceed 200 words.");
             }
         }
         product.setUpdatedAt(LocalDateTime.now());

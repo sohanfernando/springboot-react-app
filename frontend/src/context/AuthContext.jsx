@@ -22,6 +22,11 @@ export const AuthProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : [];
   });
   const [wishlist, setWishlist] = useState([]);
+  // Initialize admin from localStorage
+  const [admin, setAdmin] = useState(() => {
+    const stored = localStorage.getItem('admin');
+    return stored ? JSON.parse(stored) : null;
+  });
 
   // Persist cart to localStorage whenever it changes
   useEffect(() => {
@@ -34,6 +39,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
+  // Save admin to localStorage on admin login
+  const loginAdmin = (adminData) => {
+    setAdmin(adminData);
+    localStorage.setItem('admin', JSON.stringify(adminData));
+  };
+
   // Remove user from localStorage on logout
   const logout = () => {
     setUser(null);
@@ -41,6 +52,12 @@ export const AuthProvider = ({ children }) => {
     // Clear cart and wishlist on logout
     setCart([]);
     setWishlist([]);
+  };
+
+  // Remove admin from localStorage on admin logout
+  const logoutAdmin = () => {
+    setAdmin(null);
+    localStorage.removeItem('admin');
   };
 
   // Cart functions
@@ -125,6 +142,9 @@ export const AuthProvider = ({ children }) => {
     toggleWishlist,
     isInWishlist,
     getWishlistCount,
+    admin,
+    loginAdmin,
+    logoutAdmin,
   };
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from "axios";
 import { Link, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import AdminNavbar from '../components/AdminNavbar';
 import { useAuth } from '../context/AuthContext';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaCrown } from 'react-icons/fa';
 import loginImage from '../assets/T-shirts/Men/11.webp';
@@ -13,7 +13,7 @@ const AdminLoginPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { loginAdmin } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,7 +29,7 @@ const AdminLoginPage = () => {
         setLoading(false);
         return;
       }
-      login(response.data);
+      loginAdmin(response.data);
       alert("Welcome Admin! Redirecting to admin dashboard...");
       navigate("/admin");
     } catch (err) {
@@ -43,7 +43,7 @@ const AdminLoginPage = () => {
 
   return (
     <div className='min-h-screen flex flex-col bg-gray-50'>
-      <Navbar />
+      <AdminNavbar />
       <div className="flex-grow flex items-center justify-center p-4 pt-32">
         <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden">
           <div className="flex flex-col lg:flex-row">

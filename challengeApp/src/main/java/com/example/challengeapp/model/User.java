@@ -22,4 +22,9 @@ public class User {
 
     @Column(nullable = false)
     private String role = "USER"; // USER or ADMIN
+
+    private String phone;
+    private String address;
+    private String city;
+    private String postalCode;
 }

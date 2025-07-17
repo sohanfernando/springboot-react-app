@@ -38,21 +38,12 @@ const CartPage = () => {
     removeFromCart(productId);
   };
 
-  const handleCheckout = async () => {
-    setCheckoutLoading(true);
-    setCheckoutError('');
-    try {
-      const res = await axios.post('/api/orders', {
-        userId: user?.id,
-        items: JSON.stringify(cart), // send as JSON string
-        total: calculateTotal(),
-      });
-      setCart([]); // Clear cart after successful order
-      navigate('/order-confirmation', { state: { order: res.data } });
-    } catch (e) {
-      setCheckoutError('Checkout failed. Please try again.');
+  const handleCheckout = () => {
+    if (!user) {
+      setCheckoutError('You must be logged in to checkout.');
+      return;
     }
-    setCheckoutLoading(false);
+    navigate('/payment', { state: { cart, total: calculateTotal(), user } });
   };
 
   // Helper to get correct image URL

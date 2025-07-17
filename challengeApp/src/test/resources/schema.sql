@@ -19,4 +19,16 @@ CREATE TABLE IF NOT EXISTS products (
     subcategory VARCHAR(255),
     created_at DATETIME,
     updated_at DATETIME
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT,
+    items TEXT,
+    total DOUBLE,
+    recipient_name VARCHAR(255),
+    address VARCHAR(255),
+    city VARCHAR(255),
+    postal_code VARCHAR(255),
+    status VARCHAR(255)
 ); 

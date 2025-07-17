@@ -154,8 +154,20 @@ const OrdersPage = () => {
                         return Array.isArray(items) ? items.map((item, index) => (
                           <div key={index} className="flex items-center justify-between py-2">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                                <FaBox className="text-gray-400" />
+                              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                {item.image ? (
+                                  <img
+                                    src={
+                                      item.image.startsWith('http')
+                                        ? item.image
+                                        : `http://localhost:8080/uploads/products/${item.image.replace(/^\/uploads\/products\//, '')}`
+                                    }
+                                    alt={item.title || item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <FaBox className="text-gray-400" />
+                                )}
                               </div>
                               <div>
                                 <h4 className="font-medium text-gray-800">{item.title || item.name}</h4>

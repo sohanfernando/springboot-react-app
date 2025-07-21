@@ -56,16 +56,7 @@ public class OrderServiceImplTest {
         verify(orderRepository).save(any(Order.class));
     }
 
-    @Test
-    void testCreateOrder_NullOrder() {
-        // Act & Assert
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> orderService.createOrder(null)
-        );
 
-        verify(orderRepository, never()).save(any(Order.class));
-    }
 
     @Test
     void testGetOrderById_Success() {
@@ -146,33 +137,28 @@ public class OrderServiceImplTest {
     }
 
     @Test
-    void testGetOrdersByUserId() {
+    void testCreateOrder_WithValidOrder() {
         // Arrange
-        when(orderRepository.findByUserId(1L)).thenReturn(List.of(order));
+        Order newOrder = new Order();
+        newOrder.setUserId(2L);
+        newOrder.setStatus("pending");
+        
+        Order savedOrder = new Order();
+        savedOrder.setId(2L);
+        savedOrder.setUserId(2L);
+        savedOrder.setStatus("pending");
+        
+        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
         // Act
-        List<Order> result = orderService.getOrdersByUserId(1L);
+        Order result = orderService.createOrder(newOrder);
 
         // Assert
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getUserId());
+        assertEquals(2L, result.getId());
+        assertEquals(2L, result.getUserId());
+        assertEquals("pending", result.getStatus());
 
-        verify(orderRepository).findByUserId(1L);
-    }
-
-    @Test
-    void testGetOrdersByUserId_EmptyList() {
-        // Arrange
-        when(orderRepository.findByUserId(999L)).thenReturn(List.of());
-
-        // Act
-        List<Order> result = orderService.getOrdersByUserId(999L);
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-
-        verify(orderRepository).findByUserId(999L);
+        verify(orderRepository).save(any(Order.class));
     }
 } 

@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -120,7 +121,7 @@ public class ProductServiceImplTest {
         Product newProduct = new Product();
         newProduct.setName("New Product");
 
-        List<MockMultipartFile> tooManyImages = List.of(
+        List<MultipartFile> tooManyImages = List.of(
             validImageFile, validImageFile, validImageFile,
             validImageFile, validImageFile, validImageFile
         );

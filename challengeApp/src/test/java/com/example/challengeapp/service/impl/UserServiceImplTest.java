@@ -203,7 +203,7 @@ public class UserServiceImplTest {
 
         assertEquals("Bad credentials", exception.getMessage());
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtUtils, never()).generateJwtToken(any());
+        verify(jwtUtils, never()).generateJwtToken(any(Authentication.class));
         verify(userRepository, never()).findByEmail(anyString());
     }
 

@@ -145,6 +145,7 @@ export const AuthProvider = ({ children }) => {
     admin,
     loginAdmin,
     logoutAdmin,
+    setCart, // add this line
   };
 
   return (

@@ -27,4 +27,6 @@ public class Order {
     private String postalCode;
 
     private String status = "processing";
+
+    private Long paymentId;
 }

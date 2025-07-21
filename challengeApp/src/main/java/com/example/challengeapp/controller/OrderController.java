@@ -16,6 +16,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Order> createOrder(@RequestBody Order order) {
+        // paymentId is now part of the Order model and will be saved automatically
         return ResponseEntity.ok(orderService.createOrder(order));
     }
 

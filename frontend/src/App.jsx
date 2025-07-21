@@ -21,32 +21,92 @@ import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import PaymentPage from './pages/PaymentPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
   return (
     <div className='relative h-full w-full'>
       <Routes>
+        {/* Public Routes */}
         <Route path='/' element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/admin" element={<AdminHomePage />} />
         <Route path='/men' element={<MenPage />} />
         <Route path='/women' element={<WomenPage />} />
         <Route path='/accessories' element={<AccessoriesPage />} />
         <Route path='/latest' element={<LatestPage />} />
         <Route path="/aboutus" element={<AboutUsPage />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/product/:productId" element={<ProductDetailPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/orders" element={<OrdersPage />} />
-        <Route path="/admin-signup" element={<AdminSignupPage />} />
-        <Route path="/admin-login" element={<AdminLoginPage />} />
-        <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-        <Route path="/payment" element={<PaymentPage />} />
-        <Route path="/admin/orders" element={<AdminOrdersPage />} />
-        <Route path="/admin/users" element={<AdminUsersPage />} />
+
+        {/* Authentication Routes (redirect if already logged in) */}
+        <Route path="/login" element={
+          <ProtectedRoute requireAuth={false}>
+            <LoginPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/signup" element={
+          <ProtectedRoute requireAuth={false}>
+            <SignUpPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin-login" element={
+          <ProtectedRoute requireAuth={false}>
+            <AdminLoginPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin-signup" element={
+          <ProtectedRoute requireAuth={false}>
+            <AdminSignupPage />
+          </ProtectedRoute>
+        } />
+
+        {/* Protected User Routes */}
+        <Route path="/cart" element={
+          <ProtectedRoute requireAuth={true}>
+            <CartPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/wishlist" element={
+          <ProtectedRoute requireAuth={true}>
+            <WishlistPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute requireAuth={true}>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <ProtectedRoute requireAuth={true}>
+            <OrdersPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/payment" element={
+          <ProtectedRoute requireAuth={true}>
+            <PaymentPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/order-confirmation" element={
+          <ProtectedRoute requireAuth={true}>
+            <OrderConfirmationPage />
+          </ProtectedRoute>
+        } />
+
+        {/* Protected Admin Routes */}
+        <Route path="/admin" element={
+          <ProtectedRoute requireAdmin={true}>
+            <AdminHomePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/orders" element={
+          <ProtectedRoute requireAdmin={true}>
+            <AdminOrdersPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/users" element={
+          <ProtectedRoute requireAdmin={true}>
+            <AdminUsersPage />
+          </ProtectedRoute>
+        } />
       </Routes>
     </div>
   )

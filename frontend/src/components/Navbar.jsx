@@ -14,8 +14,9 @@ const Navbar = () => {
     logout, 
     getCartCount, 
     getWishlistCount, 
-    admin, 
-    logoutAdmin 
+    isAuthenticated,
+    isAdmin,
+    isUser
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -97,6 +98,9 @@ const Navbar = () => {
 
   // Determine if current route is admin
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Check if user should see admin content
+  const canAccessAdmin = isAuthenticated() && isAdmin();
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -239,21 +243,21 @@ const Navbar = () => {
               </Link>
 
               {/* Authentication */}
-              {isAdminRoute && admin ? (
+              {isAdminRoute && canAccessAdmin ? (
                 <div className="relative flex items-center gap-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center">
                     <FaUser size={14} className="text-white" />
                   </div>
-                  <span className="hidden sm:block text-sm font-medium text-gray-700">{admin.name}</span>
-                  <span className="hidden sm:block text-xs text-gray-500 bg-blue-100 rounded px-2 py-1 ml-1">{admin.email}</span>
-                  <button
-                    onClick={() => { logoutAdmin(); window.location.href = '/admin-login'; }}
+                                      <span className="hidden sm:block text-sm font-medium text-gray-700">{user?.name}</span>
+                    <span className="hidden sm:block text-xs text-gray-500 bg-blue-100 rounded px-2 py-1 ml-1">{user?.email}</span>
+                    <button 
+                      onClick={handleLogout}
                     className="flex items-center gap-2 text-red-600 hover:text-red-700 px-3 py-1 rounded-lg font-semibold border border-red-200 ml-3"
                   >
                     <FaSignOutAlt /> Logout
                   </button>
                 </div>
-              ) : !isAdminRoute && user ? (
+              ) : !isAdminRoute && isAuthenticated() ? (
                 <div className="relative" ref={profileRef}>
                   <button 
                     onClick={() => setProfileDropdown(!profileDropdown)}

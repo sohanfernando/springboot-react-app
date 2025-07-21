@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import axios from "axios";
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
-import loginImage from '../assets/T-shirts/Men/1.jpg'; // Using one of the hero images
+import loginImage from '../assets/T-shirts/Men/1.jpg';
+import API from '../utils/axiosConfig';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('')
@@ -12,6 +12,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -19,30 +20,46 @@ const LoginPage = () => {
     e.preventDefault()
     setLoading(true);
     setError("");
+    setFieldErrors({});
+
+    // Basic client-side validation
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const response = await axios.post("http://localhost:8080/users/login", {
+      const response = await API.post("/users/login", {
         email,
         password,
       });
 
       console.log("Login successful:", response.data);
       
-      // Use auth context to login
+      // Use auth context to login with JWT response
       login(response.data);
       
       // Check the user's role and navigate accordingly
-      if (response.data.role === "ADMIN") {
-        alert("Welcome Admin! Redirecting to admin dashboard...");
+      if (response.data.user.role === "ADMIN") {
         navigate("/admin");
       } else {
-        alert("Login successful! Redirecting to home...");
         navigate("/");
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
+      console.error("Login error:", err);
+      
+      if (err.response?.status === 400 && err.response?.data?.errors) {
+        // Handle validation errors
+        setFieldErrors(err.response.data.errors);
+        setError("Please fix the errors below");
+      } else if (err.response?.status === 401) {
+        setError("Invalid email or password");
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Login failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -99,9 +116,16 @@ const LoginPage = () => {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                      required
+                      className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-100 ${
+                        fieldErrors.email 
+                          ? 'border-red-300 focus:border-red-500' 
+                          : 'border-gray-200 focus:border-red-500'
+                      }`}
+                      disabled={loading}
                     />
+                    {fieldErrors.email && (
+                      <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+                    )}
                   </div>
 
                   {/* Password Input */}
@@ -114,75 +138,64 @@ const LoginPage = () => {
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                      required
-                      minLength="6"
+                      className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-100 ${
+                        fieldErrors.password 
+                          ? 'border-red-300 focus:border-red-500' 
+                          : 'border-gray-200 focus:border-red-500'
+                      }`}
+                      disabled={loading}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      disabled={loading}
                     >
                       {showPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
-                  </div>
-
-                  {/* Forgot Password */}
-                  <div className="text-right">
-                    <a href="#" className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors">
-                      Forgot password?
-                    </a>
+                    {fieldErrors.password && (
+                      <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
+                    )}
                   </div>
 
                   {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-semibold transition-all duration-300 hover:from-red-600 hover:to-red-700 hover:shadow-lg hover:shadow-red-500/25 transform hover:scale-[1.02] ${
-                      loading ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     {loading ? (
-                      <span className="flex items-center justify-center">
-                        <svg
-                          className="animate-spin h-5 w-5 mr-3 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
+                      <div className="flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                         Signing In...
-                      </span>
+                      </div>
                     ) : (
-                      "Sign In"
+                      'Sign In'
                     )}
                   </button>
                 </form>
 
-                {/* Sign Up Link */}
-                <div className='text-center'>
-                  <p className='text-gray-600'>
-                    Don't have an account?{" "}
-                    <Link
-                      to="/signup"
-                      className="text-red-600 hover:text-red-700 font-semibold transition-colors"
+                {/* Footer Links */}
+                <div className="mt-8 text-center space-y-4">
+                  <p className="text-gray-600">
+                    Don't have an account?{' '}
+                    <Link 
+                      to="/signup" 
+                      className="text-red-500 hover:text-red-600 font-semibold transition-colors"
                     >
-                      Create one now
+                      Sign up here
                     </Link>
                   </p>
+                  
+                  <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
+                    <Link to="/admin-login" className="hover:text-red-500 transition-colors">
+                      Admin Login
+                    </Link>
+                    <span>•</span>
+                    <Link to="/aboutus" className="hover:text-red-500 transition-colors">
+                      About Us
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

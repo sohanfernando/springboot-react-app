@@ -1,18 +1,21 @@
 import { useState } from "react";
-import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useAuth } from '../context/AuthContext';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaCrown } from 'react-icons/fa';
-import signupImage from '../assets/T-shirts/Women/5.webp'; // Using one of the hero images
+import signupImage from '../assets/T-shirts/Women/5.webp';
+import API from '../utils/axiosConfig';
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("USER");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -21,39 +24,70 @@ export default function SignUpPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setFieldErrors({});
+
+    // Client-side validation
+    if (!name || !email || !password || !confirmPassword) {
+      setError("Please fill in all fields");
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setFieldErrors({ confirmPassword: "Passwords do not match" });
+      setError("Please fix the errors below");
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setFieldErrors({ password: "Password must be at least 6 characters" });
+      setError("Please fix the errors below");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const response = await axios.post("http://localhost:8080/users/signup", {
+      const response = await API.post("/users/signup", {
         name,
         email,
         password,
-        role: "USER",
+        role: "USER", // Always USER for regular signup
       });
 
       console.log("Signup successful:", response.data);
       
-      // Use auth context to login after signup
-      login(response.data);
+      // Auto-login after successful signup
+      // First login to get the JWT token
+      const loginResponse = await API.post("/users/login", {
+        email,
+        password,
+      });
+
+      login(loginResponse.data);
+      navigate("/");
       
-      // Check the user's role and navigate accordingly
-      // if (response.data.role === "ADMIN") {
-      //   alert("Admin account created! Redirecting to admin dashboard...");
-      //   navigate("/admin");
-      // } else {
-        alert("Account created! Redirecting to home...");
-        navigate("/");
-      // }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Signup failed. Please try again."
-      );
+      console.error("Signup error:", err);
+      
+      if (err.response?.status === 400 && err.response?.data?.errors) {
+        // Handle validation errors
+        setFieldErrors(err.response.data.errors);
+        setError("Please fix the errors below");
+      } else if (err.response?.status === 409) {
+        setError("An account with this email already exists");
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Signup failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className='min-h-screen flex flex-col bg-gray-50'>
       <Navbar />
       <div className="flex-grow flex items-center justify-center p-4 pt-32">
         <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden">
@@ -63,12 +97,12 @@ export default function SignUpPage() {
               <img
                 src={signupImage}
                 alt="Fashion Model"
-                className="w-full h-full object-cover"
+                className="w-full h-[82vh] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
               <div className="absolute bottom-8 left-8 right-8 text-white">
                 <h2 className="text-3xl font-bold mb-2">Join FashionHub</h2>
-                <p className="text-lg opacity-90">Create your account and start your style journey</p>
+                <p className="text-lg opacity-90">Create your account and start your fashion journey</p>
               </div>
             </div>
 
@@ -78,10 +112,10 @@ export default function SignUpPage() {
                 {/* Header */}
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <FaCrown className="text-white text-2xl" />
+                    <FaUser className="text-white text-2xl" />
                   </div>
-                  <h1 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h1>
-                  <p className="text-gray-600">Join the FashionHub community</p>
+                  <h1 className="text-3xl font-bold text-gray-800 mb-2">Sign Up</h1>
+                  <p className="text-gray-600">Create your FashionHub account</p>
                 </div>
 
                 {/* Error Message */}
@@ -103,9 +137,16 @@ export default function SignUpPage() {
                       placeholder="Enter your full name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                      required
+                      className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-100 ${
+                        fieldErrors.name 
+                          ? 'border-red-300 focus:border-red-500' 
+                          : 'border-gray-200 focus:border-red-500'
+                      }`}
+                      disabled={loading}
                     />
+                    {fieldErrors.name && (
+                      <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>
+                    )}
                   </div>
 
                   {/* Email Input */}
@@ -118,9 +159,16 @@ export default function SignUpPage() {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                      required
+                      className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-100 ${
+                        fieldErrors.email 
+                          ? 'border-red-300 focus:border-red-500' 
+                          : 'border-gray-200 focus:border-red-500'
+                      }`}
+                      disabled={loading}
                     />
+                    {fieldErrors.email && (
+                      <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+                    )}
                   </div>
 
                   {/* Password Input */}
@@ -130,113 +178,104 @@ export default function SignUpPage() {
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Create a password"
+                      placeholder="Create a password (min. 6 characters)"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                      required
-                      minLength="6"
+                      className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-100 ${
+                        fieldErrors.password 
+                          ? 'border-red-300 focus:border-red-500' 
+                          : 'border-gray-200 focus:border-red-500'
+                      }`}
+                      disabled={loading}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      disabled={loading}
                     >
                       {showPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
+                    {fieldErrors.password && (
+                      <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
+                    )}
                   </div>
 
-                  {/* Role Selection */}
-                  {/*
+                  {/* Confirm Password Input */}
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      <FaCrown />
+                      <FaLock />
                     </div>
-                    <select
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white appearance-none"
-                      required
-                    >
-                      <option value="USER">Regular User</option>
-                      <option value="ADMIN">Administrator</option>
-                    </select>
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                  */}
-
-                  {/* Terms and Conditions */}
-                  <div className="flex items-start space-x-3">
                     <input
-                      type="checkbox"
-                      id="terms"
-                      className="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
-                      required
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-red-100 ${
+                        fieldErrors.confirmPassword 
+                          ? 'border-red-300 focus:border-red-500' 
+                          : 'border-gray-200 focus:border-red-500'
+                      }`}
+                      disabled={loading}
                     />
-                    <label htmlFor="terms" className="text-sm text-gray-600">
-                      I agree to the{" "}
-                      <a href="#" className="text-red-600 hover:text-red-700 font-medium">
-                        Terms of Service
-                      </a>{" "}
-                      and{" "}
-                      <a href="#" className="text-red-600 hover:text-red-700 font-medium">
-                        Privacy Policy
-                      </a>
-                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      disabled={loading}
+                    >
+                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                    {fieldErrors.confirmPassword && (
+                      <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>
+                    )}
                   </div>
 
                   {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-semibold transition-all duration-300 hover:from-red-600 hover:to-red-700 hover:shadow-lg hover:shadow-red-500/25 transform hover:scale-[1.02] ${
-                      loading ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     {loading ? (
-                      <span className="flex items-center justify-center">
-                        <svg
-                          className="animate-spin h-5 w-5 mr-3 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
+                      <div className="flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                         Creating Account...
-                      </span>
+                      </div>
                     ) : (
-                      "Create Account"
+                      'Create Account'
                     )}
                   </button>
                 </form>
 
-                {/* Login Link */}
-                <div className='text-center'>
-                  <p className='text-gray-600'>
-                    Already have an account?{" "}
-                    <Link
-                      to="/login"
-                      className="text-red-600 hover:text-red-700 font-semibold transition-colors"
+                {/* Footer Links */}
+                <div className="mt-8 text-center space-y-4">
+                  <p className="text-gray-600">
+                    Already have an account?{' '}
+                    <Link 
+                      to="/login" 
+                      className="text-red-500 hover:text-red-600 font-semibold transition-colors"
                     >
                       Sign in here
                     </Link>
+                  </p>
+                  
+                  <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
+                    <Link to="/admin-signup" className="hover:text-red-500 transition-colors">
+                      Admin Signup
+                    </Link>
+                    <span>•</span>
+                    <Link to="/aboutus" className="hover:text-red-500 transition-colors">
+                      About Us
+                    </Link>
+                  </div>
+
+                  {/* Terms and Privacy */}
+                  <p className="text-xs text-gray-500 mt-6">
+                    By creating an account, you agree to our{' '}
+                    <a href="#" className="text-red-500 hover:text-red-600">Terms of Service</a>
+                    {' '}and{' '}
+                    <a href="#" className="text-red-500 hover:text-red-600">Privacy Policy</a>
                   </p>
                 </div>
               </div>

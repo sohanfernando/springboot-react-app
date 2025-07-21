@@ -4,7 +4,7 @@ import com.example.challengeapp.model.Product;
 import com.example.challengeapp.repository.ProductRepository;
 import com.example.challengeapp.service.ProductService;
 import com.example.challengeapp.util.FileValidationUtil;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
     
-    private ProductRepository productRepository;
-    private FileValidationUtil fileValidationUtil;
+    private final ProductRepository productRepository;
+    private final FileValidationUtil fileValidationUtil;
     
     @Value("${app.upload.dir:uploads/products/}")
     private String uploadDir;

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { safeGetJSON, safeGetItem, safeSetJSON, safeSetItem, safeRemoveItem, validateLocalStorageData } from '../utils/localStorage';
 
 const AuthContext = createContext();
 
@@ -11,46 +12,52 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  // Initialize user and token from localStorage
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('user');
-    return stored ? JSON.parse(stored) : null;
-  });
+  // Validate localStorage integrity on startup
+  useEffect(() => {
+    validateLocalStorageData();
+  }, []);
 
-  const [token, setToken] = useState(() => {
-    return localStorage.getItem('token') || null;
-  });
-
-  // Initialize cart from localStorage
-  const [cart, setCart] = useState(() => {
-    const stored = localStorage.getItem('cart');
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  const [wishlist, setWishlist] = useState(() => {
-    const stored = localStorage.getItem('wishlist');
-    return stored ? JSON.parse(stored) : [];
-  });
+  // Initialize user and token from localStorage with safe parsing
+  const [user, setUser] = useState(() => safeGetJSON('user', null));
+  const [token, setToken] = useState(() => safeGetItem('token', null));
+  
+  // Initialize cart from localStorage with safe parsing
+  const [cart, setCart] = useState(() => safeGetJSON('cart', []));
+  const [wishlist, setWishlist] = useState(() => safeGetJSON('wishlist', []));
 
   // Persist cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
+    safeSetJSON('cart', cart);
   }, [cart]);
 
   // Persist wishlist to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    safeSetJSON('wishlist', wishlist);
   }, [wishlist]);
 
   // Login function - now handles JWT response
   const login = (loginResponse) => {
-    const { token: jwtToken, user: userData } = loginResponse;
-    
-    setUser(userData);
-    setToken(jwtToken);
-    
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', jwtToken);
+    try {
+      const { token: jwtToken, user: userData } = loginResponse;
+      
+      if (!jwtToken || !userData) {
+        throw new Error('Invalid login response structure');
+      }
+      
+      setUser(userData);
+      setToken(jwtToken);
+      
+      safeSetJSON('user', userData);
+      safeSetItem('token', jwtToken);
+    } catch (error) {
+      console.error('Error during login:', error);
+          // Clear any partial state
+    setUser(null);
+    setToken(null);
+    safeRemoveItem('user');
+    safeRemoveItem('token');
+      throw error; // Re-throw so calling component can handle it
+    }
   };
 
   // Logout function - clears JWT token
@@ -58,14 +65,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    safeRemoveItem('user');
+    safeRemoveItem('token');
     
     // Clear cart and wishlist on logout
     setCart([]);
     setWishlist([]);
-    localStorage.removeItem('cart');
-    localStorage.removeItem('wishlist');
+    safeRemoveItem('cart');
+    safeRemoveItem('wishlist');
   };
 
   // Check if user is authenticated

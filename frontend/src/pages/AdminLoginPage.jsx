@@ -45,8 +45,13 @@ const AdminLoginPage = () => {
       }
 
       // Use the same login function as regular users
-      login(response.data);
-      navigate("/admin");
+      try {
+        login(response.data);
+        navigate("/admin");
+      } catch (loginError) {
+        console.error("Admin login processing error:", loginError);
+        setError("Login failed. Please try again.");
+      }
       
     } catch (err) {
       console.error("Admin login error:", err);

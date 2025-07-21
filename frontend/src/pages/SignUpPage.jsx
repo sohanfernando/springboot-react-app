@@ -64,8 +64,13 @@ export default function SignUpPage() {
         password,
       });
 
-      login(loginResponse.data);
-      navigate("/");
+      try {
+        login(loginResponse.data);
+        navigate("/");
+      } catch (loginError) {
+        console.error("Auto-login processing error:", loginError);
+        setError("Account created but auto-login failed. Please login manually.");
+      }
       
     } catch (err) {
       console.error("Signup error:", err);

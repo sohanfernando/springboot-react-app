@@ -38,13 +38,18 @@ const LoginPage = () => {
       console.log("Login successful:", response.data);
       
       // Use auth context to login with JWT response
-      login(response.data);
-      
-      // Check the user's role and navigate accordingly
-      if (response.data.user.role === "ADMIN") {
-        navigate("/admin");
-      } else {
-        navigate("/");
+      try {
+        login(response.data);
+        
+        // Check the user's role and navigate accordingly
+        if (response.data.user.role === "ADMIN") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+      } catch (loginError) {
+        console.error("Login processing error:", loginError);
+        setError("Login failed. Please try again.");
       }
     } catch (err) {
       console.error("Login error:", err);

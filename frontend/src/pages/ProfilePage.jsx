@@ -31,7 +31,7 @@ const ProfilePage = () => {
       const res = await axios.patch(`${window.API_BASE_URL}/users/${user.id}`, formData);
       login(res.data); // update user context and localStorage
       setIsEditing(false);
-    } catch (e) {
+    } catch {
       alert('Failed to update profile.');
     }
   };

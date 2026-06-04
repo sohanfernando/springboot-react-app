@@ -22,7 +22,7 @@ const OrdersPage = () => {
           ? res.data.filter(order => order.userId === user.id)
           : [];
         setOrders(userOrders);
-      } catch (e) {
+      } catch {
         setOrders([]);
       }
       setLoading(false);

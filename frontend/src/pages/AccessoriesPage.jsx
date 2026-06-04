@@ -40,7 +40,7 @@ const AccessoriesPage = () => {
       try {
         const res = await axios.get('/admin/products/category/Accessories');
         setProducts(Array.isArray(res.data) ? res.data : []);
-      } catch (e) {
+      } catch {
         setProducts([]);
       }
       setLoading(false);

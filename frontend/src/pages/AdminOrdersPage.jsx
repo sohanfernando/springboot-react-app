@@ -17,7 +17,7 @@ const AdminOrdersPage = () => {
     try {
       const res = await axios.get(window.API_BASE_URL + '/api/orders');
       setOrders(Array.isArray(res.data) ? res.data : []);
-    } catch (e) {
+    } catch {
       setOrders([]);
     }
     setLoading(false);
@@ -28,7 +28,7 @@ const AdminOrdersPage = () => {
     try {
       await axios.delete(`${window.API_BASE_URL}/api/orders/${id}`);
       setOrders(orders.filter(order => order.id !== id));
-    } catch (e) {
+    } catch {
       alert('Failed to delete order.');
     }
   };
@@ -52,7 +52,7 @@ const AdminOrdersPage = () => {
       if (selectedOrder && selectedOrder.id === order.id) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
-    } catch (e) {
+    } catch {
       alert('Failed to update order status.');
     }
   };

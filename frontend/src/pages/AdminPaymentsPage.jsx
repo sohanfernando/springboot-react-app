@@ -16,7 +16,7 @@ const AdminPaymentsPage = () => {
     try {
       const res = await axios.get(window.API_BASE_URL + '/api/payments');
       setPayments(Array.isArray(res.data) ? res.data : []);
-    } catch (e) {
+    } catch {
       setPayments([]);
     }
     setLoading(false);
@@ -27,7 +27,7 @@ const AdminPaymentsPage = () => {
     try {
       await axios.delete(`${window.API_BASE_URL}/api/payments/${id}`);
       setPayments(payments.filter(payment => payment.id !== id));
-    } catch (e) {
+    } catch {
       alert('Failed to delete payment.');
     }
   };

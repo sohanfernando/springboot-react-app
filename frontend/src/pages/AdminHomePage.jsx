@@ -8,7 +8,7 @@ import { FaSignOutAlt, FaUserShield, FaBoxOpen, FaUsers, FaClipboardList, FaMone
 import axios from 'axios';
 
 const AdminHomePage = () => {
-  const { admin, logoutAdmin } = useAuth();
+  const { admin } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = React.useState({ products: 0, orders: 0, users: 0, payments: 0 });
 
@@ -33,7 +33,7 @@ const AdminHomePage = () => {
           users: Array.isArray(usersRes.data) ? usersRes.data.length : (Array.isArray(usersRes.data.content) ? usersRes.data.content.length : 0),
           payments: Array.isArray(paymentsRes.data) ? paymentsRes.data.length : (Array.isArray(paymentsRes.data.content) ? paymentsRes.data.content.length : 0),
         });
-      } catch (e) {
+      } catch {
         setStats({ products: 0, orders: 0, users: 0 });
       }
     };

@@ -5,7 +5,6 @@ const MenFilter = ({
   filters, 
   setFilters, 
   showFilters, 
-  setShowFilters, 
   clearFilters,
   colors = ['black', 'blue', 'white', 'red'],
   sizes = ['S', 'M', 'L'],

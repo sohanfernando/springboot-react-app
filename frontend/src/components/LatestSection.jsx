@@ -27,7 +27,7 @@ const LatestSection = () => {
           return created >= weekAgo && created <= now;
         });
         setProducts(latest);
-      } catch (e) {
+      } catch {
         setProducts([]);
       }
       setLoading(false);

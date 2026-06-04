@@ -19,7 +19,7 @@ const MenSection = () => {
       try {
         const res = await axios.get('/admin/products/category/Men');
         setProducts(Array.isArray(res.data) ? res.data : []);
-      } catch (e) {
+      } catch {
         setProducts([]);
       }
       setLoading(false);

@@ -33,6 +33,7 @@ function AdminProductManager() {
 
   useEffect(() => {
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, subcategory]);
 
   const fetchProducts = async () => {
@@ -42,7 +43,7 @@ function AdminProductManager() {
         `/admin/products/category/${category}/subcategory/${subcategory}`
       );
       setProducts(Array.isArray(res.data) ? res.data : []);
-    } catch (e) {
+    } catch {
       setProducts([]);
     }
     setLoading(false);
@@ -158,7 +159,7 @@ function AdminProductManager() {
       }
       setShowForm(false);
       fetchProducts();
-    } catch (e) {
+    } catch {
       setError('Failed to save product.');
     }
   };
@@ -168,7 +169,7 @@ function AdminProductManager() {
     try {
       await axios.delete(`/admin/products/${id}`);
       fetchProducts();
-    } catch (e) {
+    } catch {
       alert('Failed to delete.');
     }
   };

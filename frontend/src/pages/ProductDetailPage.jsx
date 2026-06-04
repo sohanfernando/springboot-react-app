@@ -115,7 +115,6 @@ const ProductDetailPage = () => {
   const colors = Array.isArray(product.colors) ? product.colors : [];
   const sizes = Array.isArray(product.sizes) ? product.sizes : [];
   const features = Array.isArray(product.features) ? product.features : [];
-  const specifications = product.specifications && typeof product.specifications === 'object' ? product.specifications : {};
   const safeSelectedImage =
     typeof selectedImage === 'number' && selectedImage >= 0 && selectedImage < images.length
       ? selectedImage

@@ -7,7 +7,7 @@ import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 const LatestPage = () => {
-  const [searchParams] = useSearchParams();
+  useSearchParams();
   const [filters, setFilters] = useState({
     availability: 'all',
     priceRange: [0, 10000],
@@ -34,7 +34,7 @@ const LatestPage = () => {
           return created >= weekAgo && created <= now;
         });
         setProducts(latest);
-      } catch (e) {
+      } catch {
         setProducts([]);
       }
       setLoading(false);

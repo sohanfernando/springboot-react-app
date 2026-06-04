@@ -5,7 +5,6 @@ const LatestFilter = ({
   filters, 
   setFilters, 
   showFilters, 
-  setShowFilters, 
   clearFilters,
   colors = ['black', 'blue', 'white', 'red', 'gray', 'brown', 'pink', 'purple'],
   sizes = ['XS', 'S', 'M', 'L', 'XL', 'One Size'],

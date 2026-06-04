@@ -5,7 +5,6 @@ const WomenFilter = ({
   filters, 
   setFilters, 
   showFilters, 
-  setShowFilters, 
   clearFilters,
   colors = ['black', 'blue', 'white', 'red', 'pink', 'purple'],
   sizes = ['XS', 'S', 'M', 'L', 'XL'],

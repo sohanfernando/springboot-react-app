@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
@@ -94,102 +94,102 @@ import bottle1 from '../assets/Accessories/10.webp';
 import bottle2 from '../assets/Accessories/11.webp';
 import bottle3 from '../assets/Accessories/12.webp';
 
+// All products data with unique IDs
+const allProducts = [
+  // Men's Products (IDs 1-30)
+  { id: 1, name: "Classic Cotton T-Shirt", price: 29.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: tshirt1 },
+  { id: 2, name: "Premium Fit T-Shirt", price: 34.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: tshirt2 },
+  { id: 3, name: "Slim Fit T-Shirt", price: 39.99, category: "Men", size: ["S", "M"], color: "white", availability: "in-stock", image: tshirt3 },
+  { id: 4, name: "Graphic Print T-Shirt", price: 44.99, category: "Men", size: ["L"], color: "red", availability: "out-of-stock", image: tshirt4 },
+  { id: 5, name: "V-Neck T-Shirt", price: 27.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: tshirt5 },
+  { id: 6, name: "Polo T-Shirt", price: 49.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: tshirt6 },
+  { id: 7, name: "Striped T-Shirt", price: 32.99, category: "Men", size: ["S", "L"], color: "white", availability: "in-stock", image: tshirt7 },
+  { id: 8, name: "Crew Neck T-Shirt", price: 24.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: tshirt8 },
+  { id: 9, name: "Long Sleeve T-Shirt", price: 54.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: tshirt9 },
+  { id: 10, name: "Henley T-Shirt", price: 37.99, category: "Men", size: ["S", "M"], color: "red", availability: "out-of-stock", image: tshirt10 },
+  
+  { id: 11, name: "Classic Oxford Shirt", price: 79.99, category: "Men", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: shirt1 },
+  { id: 12, name: "Denim Shirt", price: 89.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: shirt2 },
+  { id: 13, name: "Plaid Flannel Shirt", price: 69.99, category: "Men", size: ["S", "M", "L"], color: "red", availability: "in-stock", image: shirt3 },
+  { id: 14, name: "Chambray Shirt", price: 74.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: shirt4 },
+  { id: 15, name: "Linen Shirt", price: 84.99, category: "Men", size: ["S", "M"], color: "white", availability: "out-of-stock", image: shirt5 },
+  { id: 16, name: "Poplin Shirt", price: 64.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: img1 },
+  { id: 17, name: "Twill Shirt", price: 94.99, category: "Men", size: ["L"], color: "blue", availability: "in-stock", image: shirt7 },
+  { id: 18, name: "Casual Shirt", price: 59.99, category: "Men", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: shirt8 },
+  { id: 19, name: "Long Sleeve Shirt", price: 4800, category: "Men", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: img4 },
+  { id: 20, name: "Oversized Tee", price: 4200, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: img6 },
+  
+  { id: 21, name: "Athletic Shorts", price: 39.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: shorts1 },
+  { id: 22, name: "Cargo Shorts", price: 49.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: shorts2 },
+  { id: 23, name: "Denim Shorts", price: 44.99, category: "Men", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: shorts3 },
+  { id: 24, name: "Linen Shorts", price: 54.99, category: "Men", size: ["M", "L"], color: "white", availability: "out-of-stock", image: shorts4 },
+  { id: 25, name: "Chino Shorts", price: 34.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: shorts5 },
+  { id: 26, name: "Swim Shorts", price: 29.99, category: "Men", size: ["M", "L"], color: "red", availability: "in-stock", image: shorts6 },
+  
+  { id: 27, name: "Slim Fit Joggers", price: 59.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: pants1 },
+  { id: 28, name: "Cargo Joggers", price: 69.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: pants2 },
+  { id: 29, name: "Cotton Joggers", price: 49.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: pants3 },
+  { id: 30, name: "Fleece Joggers", price: 79.99, category: "Men", size: ["M", "L"], color: "blue", availability: "out-of-stock", image: pants4 },
+  { id: 31, name: "Track Pants", price: 44.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: pants5 },
+  { id: 32, name: "Athletic Pants", price: 54.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: pants6 },
+  
+  // Women's Products (IDs 101-127)
+  { id: 101, name: "Classic Crop Top", price: 34.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: cropTop1 },
+  { id: 102, name: "Ribbed Crop Top", price: 39.99, category: "Women", size: ["S", "M", "L"], color: "pink", availability: "in-stock", image: cropTop2 },
+  { id: 103, name: "Lace Crop Top", price: 44.99, category: "Women", size: ["XS", "S", "M"], color: "white", availability: "out-of-stock", image: cropTop3 },
+  { id: 104, name: "Summer Maxi Dress", price: 89.99, category: "Women", size: ["XS", "S", "M", "L", "XL"], color: "blue", availability: "in-stock", image: dress1 },
+  { id: 105, name: "Cocktail Dress", price: 129.99, category: "Women", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: dress2 },
+  { id: 106, name: "Floral Midi Dress", price: 79.99, category: "Women", size: ["XS", "S", "M", "L"], color: "pink", availability: "in-stock", image: dress3 },
+  { id: 107, name: "Bodycon Dress", price: 69.99, category: "Women", size: ["S", "M", "L"], color: "red", availability: "out-of-stock", image: dress4 },
+  { id: 108, name: "Wrap Dress", price: 94.99, category: "Women", size: ["M", "L", "XL"], color: "purple", availability: "in-stock", image: dress5 },
+  { id: 109, name: "High-Waist Joggers", price: 64.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: womenPants1 },
+  { id: 110, name: "Athletic Leggings", price: 54.99, category: "Women", size: ["S", "M", "L", "XL"], color: "blue", availability: "in-stock", image: womenPants2 },
+  { id: 111, name: "Wide Leg Pants", price: 74.99, category: "Women", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: womenPants3 },
+  { id: 112, name: "High-Waist Shorts", price: 44.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: womenShorts1 },
+  { id: 113, name: "Denim Shorts", price: 49.99, category: "Women", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: womenShorts2 },
+  { id: 114, name: "Athletic Shorts", price: 39.99, category: "Women", size: ["XS", "S", "M", "L"], color: "pink", availability: "out-of-stock", image: womenShorts3 },
+  { id: 115, name: "High-Impact Sports Bra", price: 49.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: sportsBra1 },
+  { id: 116, name: "Medium-Impact Sports Bra", price: 44.99, category: "Women", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: sportsBra2 },
+  { id: 117, name: "Low-Impact Sports Bra", price: 39.99, category: "Women", size: ["XS", "S", "M", "L"], color: "pink", availability: "in-stock", image: sportsBra3 },
+  { id: 118, name: "Wireless Sports Bra", price: 54.99, category: "Women", size: ["S", "M", "L", "XL"], color: "purple", availability: "out-of-stock", image: sportsBra4 },
+  { id: 119, name: "Racerback Sports Bra", price: 47.99, category: "Women", size: ["XS", "S", "M", "L"], color: "red", availability: "in-stock", image: sportsBra5 },
+  { id: 120, name: "Classic V-Neck Tee", price: 29.99, category: "Women", size: ["XS", "S", "M", "L", "XL"], color: "white", availability: "in-stock", image: womenTshirt1 },
+  { id: 121, name: "Crop Top Tee", price: 34.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: womenTshirt2 },
+  { id: 122, name: "Graphic Print Tee", price: 39.99, category: "Women", size: ["S", "M", "L"], color: "pink", availability: "in-stock", image: womenTshirt3 },
+  { id: 123, name: "Long Sleeve Tee", price: 44.99, category: "Women", size: ["XS", "S", "M", "L"], color: "blue", availability: "out-of-stock", image: womenTshirt4 },
+  { id: 124, name: "Oversized Tee", price: 37.99, category: "Women", size: ["S", "M", "L", "XL"], color: "purple", availability: "in-stock", image: womenTshirt5 },
+  { id: 125, name: "Striped Tee", price: 32.99, category: "Women", size: ["XS", "S", "M", "L"], color: "red", availability: "in-stock", image: womenTshirt6 },
+  { id: 126, name: "Henley Tee", price: 41.99, category: "Women", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: womenTshirt7 },
+  { id: 127, name: "Crew Neck Tee", price: 27.99, category: "Women", size: ["XS", "S", "M", "L", "XL"], color: "black", availability: "in-stock", image: womenTshirt8 },
+  
+  // Accessories (IDs 201-213)
+  { id: 201, name: "Gym Duffel Bag", price: 45.99, category: "Accessories", size: ["One Size"], color: "black", availability: "in-stock", image: bag1 },
+  { id: 202, name: "Sports Backpack", price: 35.99, category: "Accessories", size: ["One Size"], color: "gray", availability: "in-stock", image: bag2 },
+  { id: 203, name: "Crossbody Bag", price: 25.99, category: "Accessories", size: ["One Size"], color: "brown", availability: "out-of-stock", image: bag3 },
+  { id: 204, name: "Baseball Cap", price: 20.99, category: "Accessories", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: hat1 },
+  { id: 205, name: "Beanie Hat", price: 15.99, category: "Accessories", size: ["One Size"], color: "gray", availability: "in-stock", image: hat2 },
+  { id: 206, name: "Bucket Hat", price: 18.99, category: "Accessories", size: ["One Size"], color: "white", availability: "in-stock", image: hat3 },
+  { id: 207, name: "Comfort Slides", price: 30.99, category: "Accessories", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: slide1 },
+  { id: 208, name: "Athletic Slides", price: 25.99, category: "Accessories", size: ["S", "M", "L"], color: "blue", availability: "out-of-stock", image: slide2 },
+  { id: 209, name: "Premium Slides", price: 40.99, category: "Accessories", size: ["M", "L"], color: "brown", availability: "in-stock", image: slide3 },
+  { id: 210, name: "Insulated Water Bottle", price: 35.99, category: "Accessories", size: ["One Size"], color: "black", availability: "in-stock", image: bottle1 },
+  { id: 211, name: "Sports Bottle", price: 20.99, category: "Accessories", size: ["One Size"], color: "white", availability: "in-stock", image: bottle2 },
+  { id: 212, name: "Premium Bottle", price: 50.99, category: "Accessories", size: ["One Size"], color: "blue", availability: "in-stock", image: bottle3 },
+  
+  // Latest products (IDs 301-308)
+  { id: 301, name: "Premium Oxford Shirt", price: 4750, category: "Men", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: img1 },
+  { id: 302, name: "Classic V-Neck Tee", price: 3200, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: img2 },
+  { id: 303, name: "Graphic Print Tee", price: 5300, category: "Women", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: img3 },
+  { id: 304, name: "Long Sleeve Shirt", price: 4800, category: "Men", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: img4 },
+  { id: 305, name: "Ribbed Crop Top", price: 2900, category: "Women", size: ["XS", "S", "M"], color: "pink", availability: "in-stock", image: img5 },
+  { id: 306, name: "Oversized Tee", price: 4200, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: img6 },
+  { id: 307, name: "High-Waist Joggers", price: 3900, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: img7 },
+  { id: 308, name: "Basic Crew Tee", price: 3000, category: "Women", size: ["XS", "S", "M", "L"], color: "white", availability: "in-stock", image: img8 },
+];
+
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
-
-  // All products data with unique IDs
-  const allProducts = [
-    // Men's Products (IDs 1-30)
-    { id: 1, name: "Classic Cotton T-Shirt", price: 29.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: tshirt1 },
-    { id: 2, name: "Premium Fit T-Shirt", price: 34.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: tshirt2 },
-    { id: 3, name: "Slim Fit T-Shirt", price: 39.99, category: "Men", size: ["S", "M"], color: "white", availability: "in-stock", image: tshirt3 },
-    { id: 4, name: "Graphic Print T-Shirt", price: 44.99, category: "Men", size: ["L"], color: "red", availability: "out-of-stock", image: tshirt4 },
-    { id: 5, name: "V-Neck T-Shirt", price: 27.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: tshirt5 },
-    { id: 6, name: "Polo T-Shirt", price: 49.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: tshirt6 },
-    { id: 7, name: "Striped T-Shirt", price: 32.99, category: "Men", size: ["S", "L"], color: "white", availability: "in-stock", image: tshirt7 },
-    { id: 8, name: "Crew Neck T-Shirt", price: 24.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: tshirt8 },
-    { id: 9, name: "Long Sleeve T-Shirt", price: 54.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: tshirt9 },
-    { id: 10, name: "Henley T-Shirt", price: 37.99, category: "Men", size: ["S", "M"], color: "red", availability: "out-of-stock", image: tshirt10 },
-    
-    { id: 11, name: "Classic Oxford Shirt", price: 79.99, category: "Men", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: shirt1 },
-    { id: 12, name: "Denim Shirt", price: 89.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: shirt2 },
-    { id: 13, name: "Plaid Flannel Shirt", price: 69.99, category: "Men", size: ["S", "M", "L"], color: "red", availability: "in-stock", image: shirt3 },
-    { id: 14, name: "Chambray Shirt", price: 74.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: shirt4 },
-    { id: 15, name: "Linen Shirt", price: 84.99, category: "Men", size: ["S", "M"], color: "white", availability: "out-of-stock", image: shirt5 },
-    { id: 16, name: "Poplin Shirt", price: 64.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: img1 },
-    { id: 17, name: "Twill Shirt", price: 94.99, category: "Men", size: ["L"], color: "blue", availability: "in-stock", image: shirt7 },
-    { id: 18, name: "Casual Shirt", price: 59.99, category: "Men", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: shirt8 },
-    { id: 19, name: "Long Sleeve Shirt", price: 4800, category: "Men", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: img4 },
-    { id: 20, name: "Oversized Tee", price: 4200, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: img6 },
-    
-    { id: 21, name: "Athletic Shorts", price: 39.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: shorts1 },
-    { id: 22, name: "Cargo Shorts", price: 49.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: shorts2 },
-    { id: 23, name: "Denim Shorts", price: 44.99, category: "Men", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: shorts3 },
-    { id: 24, name: "Linen Shorts", price: 54.99, category: "Men", size: ["M", "L"], color: "white", availability: "out-of-stock", image: shorts4 },
-    { id: 25, name: "Chino Shorts", price: 34.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: shorts5 },
-    { id: 26, name: "Swim Shorts", price: 29.99, category: "Men", size: ["M", "L"], color: "red", availability: "in-stock", image: shorts6 },
-    
-    { id: 27, name: "Slim Fit Joggers", price: 59.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: pants1 },
-    { id: 28, name: "Cargo Joggers", price: 69.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: pants2 },
-    { id: 29, name: "Cotton Joggers", price: 49.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: pants3 },
-    { id: 30, name: "Fleece Joggers", price: 79.99, category: "Men", size: ["M", "L"], color: "blue", availability: "out-of-stock", image: pants4 },
-    { id: 31, name: "Track Pants", price: 44.99, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: pants5 },
-    { id: 32, name: "Athletic Pants", price: 54.99, category: "Men", size: ["M", "L"], color: "blue", availability: "in-stock", image: pants6 },
-    
-    // Women's Products (IDs 101-127)
-    { id: 101, name: "Classic Crop Top", price: 34.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: cropTop1 },
-    { id: 102, name: "Ribbed Crop Top", price: 39.99, category: "Women", size: ["S", "M", "L"], color: "pink", availability: "in-stock", image: cropTop2 },
-    { id: 103, name: "Lace Crop Top", price: 44.99, category: "Women", size: ["XS", "S", "M"], color: "white", availability: "out-of-stock", image: cropTop3 },
-    { id: 104, name: "Summer Maxi Dress", price: 89.99, category: "Women", size: ["XS", "S", "M", "L", "XL"], color: "blue", availability: "in-stock", image: dress1 },
-    { id: 105, name: "Cocktail Dress", price: 129.99, category: "Women", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: dress2 },
-    { id: 106, name: "Floral Midi Dress", price: 79.99, category: "Women", size: ["XS", "S", "M", "L"], color: "pink", availability: "in-stock", image: dress3 },
-    { id: 107, name: "Bodycon Dress", price: 69.99, category: "Women", size: ["S", "M", "L"], color: "red", availability: "out-of-stock", image: dress4 },
-    { id: 108, name: "Wrap Dress", price: 94.99, category: "Women", size: ["M", "L", "XL"], color: "purple", availability: "in-stock", image: dress5 },
-    { id: 109, name: "High-Waist Joggers", price: 64.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: womenPants1 },
-    { id: 110, name: "Athletic Leggings", price: 54.99, category: "Women", size: ["S", "M", "L", "XL"], color: "blue", availability: "in-stock", image: womenPants2 },
-    { id: 111, name: "Wide Leg Pants", price: 74.99, category: "Women", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: womenPants3 },
-    { id: 112, name: "High-Waist Shorts", price: 44.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: womenShorts1 },
-    { id: 113, name: "Denim Shorts", price: 49.99, category: "Women", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: womenShorts2 },
-    { id: 114, name: "Athletic Shorts", price: 39.99, category: "Women", size: ["XS", "S", "M", "L"], color: "pink", availability: "out-of-stock", image: womenShorts3 },
-    { id: 115, name: "High-Impact Sports Bra", price: 49.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: sportsBra1 },
-    { id: 116, name: "Medium-Impact Sports Bra", price: 44.99, category: "Women", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: sportsBra2 },
-    { id: 117, name: "Low-Impact Sports Bra", price: 39.99, category: "Women", size: ["XS", "S", "M", "L"], color: "pink", availability: "in-stock", image: sportsBra3 },
-    { id: 118, name: "Wireless Sports Bra", price: 54.99, category: "Women", size: ["S", "M", "L", "XL"], color: "purple", availability: "out-of-stock", image: sportsBra4 },
-    { id: 119, name: "Racerback Sports Bra", price: 47.99, category: "Women", size: ["XS", "S", "M", "L"], color: "red", availability: "in-stock", image: sportsBra5 },
-    { id: 120, name: "Classic V-Neck Tee", price: 29.99, category: "Women", size: ["XS", "S", "M", "L", "XL"], color: "white", availability: "in-stock", image: womenTshirt1 },
-    { id: 121, name: "Crop Top Tee", price: 34.99, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: womenTshirt2 },
-    { id: 122, name: "Graphic Print Tee", price: 39.99, category: "Women", size: ["S", "M", "L"], color: "pink", availability: "in-stock", image: womenTshirt3 },
-    { id: 123, name: "Long Sleeve Tee", price: 44.99, category: "Women", size: ["XS", "S", "M", "L"], color: "blue", availability: "out-of-stock", image: womenTshirt4 },
-    { id: 124, name: "Oversized Tee", price: 37.99, category: "Women", size: ["S", "M", "L", "XL"], color: "purple", availability: "in-stock", image: womenTshirt5 },
-    { id: 125, name: "Striped Tee", price: 32.99, category: "Women", size: ["XS", "S", "M", "L"], color: "red", availability: "in-stock", image: womenTshirt6 },
-    { id: 126, name: "Henley Tee", price: 41.99, category: "Women", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: womenTshirt7 },
-    { id: 127, name: "Crew Neck Tee", price: 27.99, category: "Women", size: ["XS", "S", "M", "L", "XL"], color: "black", availability: "in-stock", image: womenTshirt8 },
-    
-    // Accessories (IDs 201-213)
-    { id: 201, name: "Gym Duffel Bag", price: 45.99, category: "Accessories", size: ["One Size"], color: "black", availability: "in-stock", image: bag1 },
-    { id: 202, name: "Sports Backpack", price: 35.99, category: "Accessories", size: ["One Size"], color: "gray", availability: "in-stock", image: bag2 },
-    { id: 203, name: "Crossbody Bag", price: 25.99, category: "Accessories", size: ["One Size"], color: "brown", availability: "out-of-stock", image: bag3 },
-    { id: 204, name: "Baseball Cap", price: 20.99, category: "Accessories", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: hat1 },
-    { id: 205, name: "Beanie Hat", price: 15.99, category: "Accessories", size: ["One Size"], color: "gray", availability: "in-stock", image: hat2 },
-    { id: 206, name: "Bucket Hat", price: 18.99, category: "Accessories", size: ["One Size"], color: "white", availability: "in-stock", image: hat3 },
-    { id: 207, name: "Comfort Slides", price: 30.99, category: "Accessories", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: slide1 },
-    { id: 208, name: "Athletic Slides", price: 25.99, category: "Accessories", size: ["S", "M", "L"], color: "blue", availability: "out-of-stock", image: slide2 },
-    { id: 209, name: "Premium Slides", price: 40.99, category: "Accessories", size: ["M", "L"], color: "brown", availability: "in-stock", image: slide3 },
-    { id: 210, name: "Insulated Water Bottle", price: 35.99, category: "Accessories", size: ["One Size"], color: "black", availability: "in-stock", image: bottle1 },
-    { id: 211, name: "Sports Bottle", price: 20.99, category: "Accessories", size: ["One Size"], color: "white", availability: "in-stock", image: bottle2 },
-    { id: 212, name: "Premium Bottle", price: 50.99, category: "Accessories", size: ["One Size"], color: "blue", availability: "in-stock", image: bottle3 },
-    
-    // Latest products (IDs 301-308)
-    { id: 301, name: "Premium Oxford Shirt", price: 4750, category: "Men", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: img1 },
-    { id: 302, name: "Classic V-Neck Tee", price: 3200, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: img2 },
-    { id: 303, name: "Graphic Print Tee", price: 5300, category: "Women", size: ["S", "M", "L"], color: "white", availability: "in-stock", image: img3 },
-    { id: 304, name: "Long Sleeve Shirt", price: 4800, category: "Men", size: ["S", "M", "L"], color: "blue", availability: "in-stock", image: img4 },
-    { id: 305, name: "Ribbed Crop Top", price: 2900, category: "Women", size: ["XS", "S", "M"], color: "pink", availability: "in-stock", image: img5 },
-    { id: 306, name: "Oversized Tee", price: 4200, category: "Men", size: ["S", "M", "L"], color: "black", availability: "in-stock", image: img6 },
-    { id: 307, name: "High-Waist Joggers", price: 3900, category: "Women", size: ["XS", "S", "M", "L"], color: "black", availability: "in-stock", image: img7 },
-    { id: 308, name: "Basic Crew Tee", price: 3000, category: "Women", size: ["XS", "S", "M", "L"], color: "white", availability: "in-stock", image: img8 },
-  ];
 
   // Filter products based on search query
   const searchResults = useMemo(() => {

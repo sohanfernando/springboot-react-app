@@ -12,7 +12,7 @@ const AdminUsersPage = () => {
       try {
         const res = await axios.get(window.API_BASE_URL + '/users');
         setUsers(Array.isArray(res.data) ? res.data : []);
-      } catch (e) {
+      } catch {
         setUsers([]);
       }
       setLoading(false);

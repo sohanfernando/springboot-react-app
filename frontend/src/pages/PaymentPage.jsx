@@ -39,6 +39,7 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
       // Create payment intent when component mounts for Stripe payments
       createPaymentIntent();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, total]);
 
   const createPaymentIntent = async () => {

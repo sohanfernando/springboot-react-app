@@ -5,7 +5,6 @@ const AccessoriesFilter = ({
   filters, 
   setFilters, 
   showFilters, 
-  setShowFilters, 
   clearFilters,
   colors = ['black', 'blue', 'white', 'red', 'gray', 'brown'],
   sizes = ['S', 'M', 'L', 'One Size'],

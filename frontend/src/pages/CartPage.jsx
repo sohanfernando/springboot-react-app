@@ -4,12 +4,11 @@ import { FaTrash, FaArrowLeft, FaShoppingBag, FaHeart } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import axios from 'axios';
 
 const CartPage = () => {
-  const { cart, removeFromCart, updateCartQuantity, getCartCount, user, setCart } = useAuth();
+  const { cart, removeFromCart, updateCartQuantity, getCartCount, user } = useAuth();
   const navigate = useNavigate();
-  const [checkoutLoading, setCheckoutLoading] = React.useState(false);
+  const [checkoutLoading] = React.useState(false);
   const [checkoutError, setCheckoutError] = React.useState('');
 
   const calculateSubtotal = () => {

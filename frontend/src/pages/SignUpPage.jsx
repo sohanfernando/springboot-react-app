@@ -23,7 +23,7 @@ export default function SignUpPage() {
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:8080/users/signup", {
+      const response = await axios.post("http://localhost:8081/users/signup", {
         name,
         email,
         password,

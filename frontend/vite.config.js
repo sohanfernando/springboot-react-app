@@ -6,10 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/admin/products': 'http://localhost:8080',
-      '/admin/users': 'http://localhost:8080',
-      '/admin/orders': 'http://localhost:8080',
-      '/api/orders': 'http://localhost:8080',
+      '/admin/products': 'http://localhost:8081',
+      '/admin/users': 'http://localhost:8081',
+      '/admin/orders': 'http://localhost:8081',
+      '/api/orders': 'http://localhost:8081',
     },
   },
 })

@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  backend:
+    build: ./challengeApp
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/userDB?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1234
+      - STRIPE_SECRET_KEY=your_new_stripe_secret_key
+      - STRIPE_PUBLIC_KEY=your_new_stripe_public_key
+      - SERVER_PORT=8081
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: userDB
+    ports:
+      - "3306:3306"

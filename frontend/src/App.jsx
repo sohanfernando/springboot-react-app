@@ -21,6 +21,7 @@ import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import PaymentPage from './pages/PaymentPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import AdminPaymentsPage from './pages/AdminPaymentsPage';
 
 const App = () => {
   return (
@@ -47,6 +48,7 @@ const App = () => {
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/payments" element={<AdminPaymentsPage />} />
       </Routes>
     </div>
   )

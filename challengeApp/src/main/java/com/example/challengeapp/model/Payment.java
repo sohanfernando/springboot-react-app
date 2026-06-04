@@ -27,6 +27,8 @@ public class Payment {
 
     private Long orderId;
 
+    private String stripePaymentIntentId;
+
     @Temporal(TemporalType.TIMESTAMP)
     private java.util.Date paymentDate;
 }

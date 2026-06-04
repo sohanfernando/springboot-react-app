@@ -10,7 +10,7 @@ const AdminUsersPage = () => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const res = await axios.get('http://localhost:8080/users');
+        const res = await axios.get('http://localhost:8081/users');
         setUsers(Array.isArray(res.data) ? res.data : []);
       } catch (e) {
         setUsers([]);

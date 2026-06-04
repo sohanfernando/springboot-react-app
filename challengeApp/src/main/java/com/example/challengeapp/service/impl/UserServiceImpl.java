@@ -43,7 +43,11 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getCity(),
+                user.getPostalCode()
         );
     }
 
@@ -60,7 +64,11 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getCity(),
+                user.getPostalCode()
         );
     }
 
@@ -72,7 +80,11 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getCity(),
+                user.getPostalCode()
             ));
         }
         return result;

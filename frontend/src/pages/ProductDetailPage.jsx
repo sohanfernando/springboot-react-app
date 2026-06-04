@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaHeart, FaRegHeart, FaShoppingBag, FaArrowLeft, FaStar, FaTruck, FaShieldAlt, FaUndo } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import axios from 'axios';
@@ -9,14 +10,15 @@ import axios from 'axios';
 const getImageUrl = (img) => {
   if (!img) return '';
   if (img.startsWith('http')) return img;
-  if (img.startsWith('/uploads/products/')) return `http://localhost:8080${img}`;
-  return `http://localhost:8080/uploads/products/${img}`;
+  if (img.startsWith('/uploads/products/')) return `http://localhost:8081${img}`;
+  return `http://localhost:8081/uploads/products/${img}`;
 };
 
 const ProductDetailPage = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { addToCart, toggleWishlist, isInWishlist } = useAuth();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -76,11 +78,11 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = () => {
     if (sizes.length > 0 && !selectedSize) {
-      alert('Please select a size');
+      showToast('Please select a size', 'error');
       return;
     }
     if (!selectedColor) {
-      alert('Please select a color');
+      showToast('Please select a color', 'error');
       return;
     }
 
@@ -92,7 +94,7 @@ const ProductDetailPage = () => {
       image: images.length > 0 ? getImageUrl(images[safeSelectedImage]) : '',
     });
 
-    alert('Product added to cart!');
+    showToast('Product added to cart!', 'success');
   };
 
   const handleToggleWishlist = () => {
@@ -172,7 +174,7 @@ const ProductDetailPage = () => {
             <div className="space-y-6">
               {/* Title and Rating */}
               <div>
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">{product.title}</h1>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">{product.title || product.name}</h1>
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex items-center gap-1">
                     <FaStar className="text-yellow-400" />

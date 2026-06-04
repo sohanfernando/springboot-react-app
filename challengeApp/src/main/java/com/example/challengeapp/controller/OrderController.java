@@ -36,4 +36,10 @@ public class OrderController {
         order.setStatus(status.replaceAll("\"", "")); // Remove quotes if sent as JSON string
         return ResponseEntity.ok(orderService.createOrder(order));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
+        orderService.deleteOrder(id);
+        return ResponseEntity.ok().build();
+    }
 } 

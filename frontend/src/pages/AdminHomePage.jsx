@@ -4,13 +4,13 @@ import AdminFooter from '../components/AdminFooter';
 import AdminProductManager from '../components/AdminProductManager';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FaSignOutAlt, FaUserShield, FaBoxOpen, FaUsers, FaClipboardList } from 'react-icons/fa';
+import { FaSignOutAlt, FaUserShield, FaBoxOpen, FaUsers, FaClipboardList, FaMoneyCheckAlt } from 'react-icons/fa';
 import axios from 'axios';
 
 const AdminHomePage = () => {
   const { admin, logoutAdmin } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = React.useState({ products: 0, orders: 0, users: 0 });
+  const [stats, setStats] = React.useState({ products: 0, orders: 0, users: 0, payments: 0 });
 
   React.useEffect(() => {
     if (!admin || admin.role !== 'ADMIN') {
@@ -21,15 +21,17 @@ const AdminHomePage = () => {
   React.useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [productsRes, ordersRes, usersRes] = await Promise.all([
-          axios.get('http://localhost:8080/admin/products'),
-          axios.get('http://localhost:8080/api/orders'),
-          axios.get('http://localhost:8080/users'),
+        const [productsRes, ordersRes, usersRes, paymentsRes] = await Promise.all([
+          axios.get('http://localhost:8081/admin/products'),
+          axios.get('http://localhost:8081/api/orders'),
+          axios.get('http://localhost:8081/users'),
+          axios.get('http://localhost:8081/api/payments'),
         ]);
         setStats({
           products: Array.isArray(productsRes.data) ? productsRes.data.length : (Array.isArray(productsRes.data.content) ? productsRes.data.content.length : 0),
           orders: Array.isArray(ordersRes.data) ? ordersRes.data.length : (Array.isArray(ordersRes.data.content) ? ordersRes.data.content.length : 0),
           users: Array.isArray(usersRes.data) ? usersRes.data.length : (Array.isArray(usersRes.data.content) ? usersRes.data.content.length : 0),
+          payments: Array.isArray(paymentsRes.data) ? paymentsRes.data.length : (Array.isArray(paymentsRes.data.content) ? paymentsRes.data.content.length : 0),
         });
       } catch (e) {
         setStats({ products: 0, orders: 0, users: 0 });
@@ -47,7 +49,7 @@ const AdminHomePage = () => {
       <AdminNavbar />
       {/* Stat Cards */}
       <div className="max-w-7xl mx-auto px-4 pt-12 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 transition-transform">
             <FaBoxOpen className="text-5xl text-purple-600 mb-3" />
             <span className="text-4xl font-extrabold text-purple-700 mb-1">{stats.products}</span>
@@ -63,6 +65,17 @@ const AdminHomePage = () => {
               onClick={() => navigate('/admin/orders')}
             >
               Manage Orders
+            </button>
+          </div>
+          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 transition-transform">
+            <FaMoneyCheckAlt className="text-5xl text-pink-600 mb-3" />
+            <span className="text-4xl font-extrabold text-pink-700 mb-1">{stats.payments}</span>
+            <span className="text-lg font-semibold text-gray-700">Payments</span>
+            <button
+              className="mt-4 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+              onClick={() => navigate('/admin/payments')}
+            >
+              Manage Payments
             </button>
           </div>
           <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 transition-transform">

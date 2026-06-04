@@ -176,8 +176,8 @@ function AdminProductManager() {
   const getImageUrl = (img) => {
     if (!img) return '';
     if (img.startsWith('http')) return img;
-    if (img.startsWith('/uploads/products/')) return `http://localhost:8080${img}`;
-    return `http://localhost:8080/uploads/products/${img}`;
+    if (img.startsWith('/uploads/products/')) return `http://localhost:8081${img}`;
+    return `http://localhost:8081/uploads/products/${img}`;
   };
 
   // Filter products by search

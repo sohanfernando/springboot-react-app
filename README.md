@@ -10,7 +10,7 @@ A full-stack e-commerce web application with a Spring Boot backend and React fro
 - User authentication (user/admin separation)
 - Product catalog with categories and images
 - Shopping cart and checkout flow
-- Payment simulation
+- **Stripe payment integration** (full payment processing)
 - Order management (user and admin views)
 - Admin dashboard (manage products, orders, users)
 - Profile management (edit and persist user info)
@@ -63,9 +63,25 @@ ALTER TABLE users ADD COLUMN postalCode VARCHAR(255);
 - Backend runs at `http://localhost:8080`
 - Default admin/user roles supported
 
+## Payment Integration
+
+This application uses **Stripe** for secure payment processing. 
+
+### Quick Setup
+1. Get your Stripe API keys from [Stripe Dashboard](https://dashboard.stripe.com)
+2. Configure backend: Update `challengeApp/src/main/resources/application.properties` with your Stripe secret key
+3. Configure frontend: Update `frontend/src/pages/PaymentPage.jsx` with your Stripe publishable key
+4. See `STRIPE_SETUP.md` for detailed setup instructions
+
+### Payment Flow
+- Orders over Rs 3000: Stripe card payment required
+- Orders Rs 3000 or less: Cash on Delivery option available
+- Secure payment processing with Stripe Elements
+
 ## Notes
 - Product images are stored in `challengeApp/uploads/products/`
 - Update CORS settings in backend if deploying to production
+- **Important:** Configure Stripe API keys before testing payments (see `STRIPE_SETUP.md`)
 
 ---
 

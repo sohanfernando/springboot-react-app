@@ -2,6 +2,7 @@ package com.example.challengeapp.service.impl;
 
 import com.example.challengeapp.model.Order;
 import com.example.challengeapp.repository.OrderRepository;
+import com.example.challengeapp.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -16,11 +17,13 @@ import static org.mockito.Mockito.*;
 public class OrderServiceImplTest {
     private OrderRepository orderRepository;
     private OrderServiceImpl orderService;
+    private PaymentRepository paymentRepository;
 
     @BeforeEach
     void setUp() {
         orderRepository = Mockito.mock(OrderRepository.class);
-        orderService = new OrderServiceImpl(orderRepository);
+        paymentRepository = Mockito.mock(PaymentRepository.class);
+        orderService = new OrderServiceImpl(orderRepository, paymentRepository);
     }
 
     @Test

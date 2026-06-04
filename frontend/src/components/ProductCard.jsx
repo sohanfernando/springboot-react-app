@@ -2,12 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaRegHeart, FaRegEye, FaShoppingBag, FaHeart } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const getImageUrl = (img) => {
   if (!img) return '';
   if (img.startsWith('http')) return img;
-  if (img.startsWith('/uploads/products/')) return `http://localhost:8080${img}`;
-  return `http://localhost:8080/uploads/products/${img}`;
+  if (img.startsWith('/uploads/products/')) return `http://localhost:8081${img}`;
+  return `http://localhost:8081/uploads/products/${img}`;
 };
 
 const ProductCard = ({ image, title, price, color, availability, sizes, id }) => {
@@ -16,6 +17,7 @@ const ProductCard = ({ image, title, price, color, availability, sizes, id }) =>
     toggleWishlist, 
     isInWishlist 
   } = useAuth();
+  const { showToast } = useToast();
 
   const isWishlisted = isInWishlist(id);
 
@@ -31,6 +33,9 @@ const ProductCard = ({ image, title, price, color, availability, sizes, id }) =>
         availability,
         sizes
       });
+      showToast('Product added to cart!', 'success');
+    } else {
+      showToast('This product is out of stock', 'error');
     }
   };
 

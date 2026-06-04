@@ -30,5 +30,6 @@ CREATE TABLE IF NOT EXISTS orders (
     address VARCHAR(255),
     city VARCHAR(255),
     postal_code VARCHAR(255),
-    status VARCHAR(255)
+    status VARCHAR(255),
+    payment_id BIGINT
 ); 

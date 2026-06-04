@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -23,7 +23,7 @@ public class OrderControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private OrderService orderService;
 
     private Order order;
@@ -39,7 +39,7 @@ public class OrderControllerTest {
     @Test
     void testPlaceOrder() throws Exception {
         Mockito.when(orderService.createOrder(any(Order.class))).thenReturn(order);
-        mockMvc.perform(MockMvcRequestBuilders.post("/admin/orders")
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"userId\":1}"))
                 .andExpect(status().isOk());
@@ -48,7 +48,7 @@ public class OrderControllerTest {
     @Test
     void testGetOrderById() throws Exception {
         Mockito.when(orderService.getOrderById(1L)).thenReturn(order);
-        mockMvc.perform(MockMvcRequestBuilders.get("/admin/orders/1"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/orders/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1));
     }
@@ -56,7 +56,7 @@ public class OrderControllerTest {
     @Test
     void testGetAllOrders() throws Exception {
         Mockito.when(orderService.getAllOrders()).thenReturn(List.of(order));
-        mockMvc.perform(MockMvcRequestBuilders.get("/admin/orders"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/orders"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1));
     }

@@ -24,11 +24,11 @@ public class StripeService {
         Stripe.apiKey = stripeSecretKey;
     }
 
-    public PaymentIntent createPaymentIntent(Long amount, String currency, String description) throws StripeException {
+    public PaymentIntent createPaymentIntent(Long amount, String currency, String description, String receiptEmail) throws StripeException {
         // Convert amount to cents (Stripe uses smallest currency unit)
         long amountInCents = amount * 100;
 
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+        PaymentIntentCreateParams.Builder builder = PaymentIntentCreateParams.builder()
                 .setAmount(amountInCents)
                 .setCurrency(currency)
                 .setDescription(description)
@@ -36,10 +36,13 @@ public class StripeService {
                         PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
                                 .setEnabled(true)
                                 .build()
-                )
-                .build();
+                );
 
-        return PaymentIntent.create(params);
+        if (receiptEmail != null && !receiptEmail.trim().isEmpty()) {
+            builder.setReceiptEmail(receiptEmail);
+        }
+
+        return PaymentIntent.create(builder.build());
     }
 
     public PaymentIntent confirmPaymentIntent(String paymentIntentId) throws StripeException {

@@ -16,7 +16,7 @@ const OrdersPage = () => {
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        const res = await axios.get('http://localhost:8081/api/orders');
+        const res = await axios.get(window.API_BASE_URL + '/api/orders');
         // Filter orders for this user
         const userOrders = Array.isArray(res.data)
           ? res.data.filter(order => order.userId === user.id)
@@ -160,7 +160,7 @@ const OrdersPage = () => {
                                     src={
                                       item.image.startsWith('http')
                                         ? item.image
-                                        : `http://localhost:8081/uploads/products/${item.image.replace(/^\/uploads\/products\//, '')}`
+                                        : `${window.API_BASE_URL}/uploads/products/${item.image.replace(/^\/uploads\/products\//, '')}`
                                     }
                                     alt={item.title || item.name}
                                     className="w-full h-full object-cover"

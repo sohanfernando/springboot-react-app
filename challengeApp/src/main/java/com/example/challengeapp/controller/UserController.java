@@ -17,25 +17,25 @@ public class UserController {
     private UserServiceImpl userServiceImpl;
     private UserRepository userRepository;
 
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(originPatterns = "*")
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody UserCreateRequestDto userCreateRequestDto) {
         return ResponseEntity.ok(userServiceImpl.createUser(userCreateRequestDto));
     }
 
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(originPatterns = "*")
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginUserRequestDto loginUserRequestDto) {
         return ResponseEntity.ok(userServiceImpl.login(loginUserRequestDto));
     }
 
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(originPatterns = "*")
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
         return ResponseEntity.ok(userServiceImpl.getAllUsers());
     }
 
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(originPatterns = "*")
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
         var userOpt = userRepository.findById(id);

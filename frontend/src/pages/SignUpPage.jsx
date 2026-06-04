@@ -10,7 +10,6 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("USER");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +22,7 @@ export default function SignUpPage() {
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:8081/users/signup", {
+      const response = await axios.post("/users/signup", {
         name,
         email,
         password,

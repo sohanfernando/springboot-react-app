@@ -43,10 +43,11 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
 
   const createPaymentIntent = async () => {
     try {
-      const response = await axios.post('http://localhost:8081/api/payments/create-payment-intent', {
+      const response = await axios.post(window.API_BASE_URL + '/api/payments/create-payment-intent', {
         amount: Math.round(total), // Convert to integer
-        currency: 'usd',
-        description: `Order payment for ${user?.name || 'Customer'}`
+        currency: 'lkr',
+        description: `Order payment for ${user?.name || 'Customer'}`,
+        receiptEmail: user?.email
       });
       setClientSecret(response.data.clientSecret);
     } catch (err) {
@@ -60,7 +61,7 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
     setLoading(true);
     setError('');
     try {
-      const paymentRes = await axios.post('http://localhost:8081/api/payments', {
+      const paymentRes = await axios.post(window.API_BASE_URL + '/api/payments', {
         recipientName,
         paymentMethod: 'Cash on Delivery',
         amount: total,
@@ -70,7 +71,7 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
       });
       const payment = paymentRes.data;
       
-      const orderRes = await axios.post('http://localhost:8081/api/orders', {
+      const orderRes = await axios.post(window.API_BASE_URL + '/api/orders', {
         userId: user.id,
         items: JSON.stringify(cart),
         total,
@@ -81,7 +82,7 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
         paymentId: payment.id,
       });
       
-      await axios.patch(`http://localhost:8081/api/payments/${payment.id}/order`, orderRes.data.id, {
+      await axios.patch(`${window.API_BASE_URL}/api/payments/${payment.id}/order`, orderRes.data.id, {
         headers: { 'Content-Type': 'application/json' },
       });
       
@@ -130,7 +131,7 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
 
       if (paymentIntent.status === 'succeeded') {
         // Create payment record in backend
-        const paymentRes = await axios.post('http://localhost:8081/api/payments/stripe-payment', {
+        const paymentRes = await axios.post(window.API_BASE_URL + '/api/payments/stripe-payment', {
           paymentIntentId: paymentIntent.id,
           recipientName,
           amount: total,
@@ -142,7 +143,7 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
         const payment = paymentRes.data;
 
         // Create order
-        const orderRes = await axios.post('http://localhost:8081/api/orders', {
+        const orderRes = await axios.post(window.API_BASE_URL + '/api/orders', {
           userId: user.id,
           items: JSON.stringify(cart),
           total,
@@ -154,7 +155,7 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
         });
 
         // Update payment with orderId
-        await axios.patch(`http://localhost:8081/api/payments/${payment.id}/order`, orderRes.data.id, {
+        await axios.patch(`${window.API_BASE_URL}/api/payments/${payment.id}/order`, orderRes.data.id, {
           headers: { 'Content-Type': 'application/json' },
         });
 

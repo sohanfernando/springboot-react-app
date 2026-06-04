@@ -17,7 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(originPatterns = "*")
 public class PaymentController {
     private final PaymentRepository paymentRepository;
     private final StripeService stripeService;
@@ -27,9 +27,10 @@ public class PaymentController {
         try {
             Long amount = Long.valueOf(request.get("amount").toString());
             String description = request.getOrDefault("description", "Order Payment").toString();
-            String currency = request.getOrDefault("currency", "usd").toString();
+            String currency = request.getOrDefault("currency", "lkr").toString();
+            String receiptEmail = request.getOrDefault("receiptEmail", "").toString();
 
-            PaymentIntent paymentIntent = stripeService.createPaymentIntent(amount, currency, description);
+            PaymentIntent paymentIntent = stripeService.createPaymentIntent(amount, currency, description, receiptEmail);
             Map<String, String> response = stripeService.createPaymentResponse(paymentIntent);
             
             return ResponseEntity.ok(response);

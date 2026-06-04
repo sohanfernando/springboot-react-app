@@ -15,7 +15,7 @@ const AdminOrdersPage = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:8081/api/orders');
+      const res = await axios.get(window.API_BASE_URL + '/api/orders');
       setOrders(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       setOrders([]);
@@ -26,7 +26,7 @@ const AdminOrdersPage = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this order?')) return;
     try {
-      await axios.delete(`http://localhost:8081/api/orders/${id}`);
+      await axios.delete(`${window.API_BASE_URL}/api/orders/${id}`);
       setOrders(orders.filter(order => order.id !== id));
     } catch (e) {
       alert('Failed to delete order.');
@@ -45,7 +45,7 @@ const AdminOrdersPage = () => {
 
   const handleStatusChange = async (order, newStatus) => {
     try {
-      await axios.patch(`http://localhost:8081/api/orders/${order.id}/status`, newStatus, {
+      await axios.patch(`${window.API_BASE_URL}/api/orders/${order.id}/status`, newStatus, {
         headers: { 'Content-Type': 'text/plain' },
       });
       setOrders(orders.map(o => o.id === order.id ? { ...o, status: newStatus } : o));

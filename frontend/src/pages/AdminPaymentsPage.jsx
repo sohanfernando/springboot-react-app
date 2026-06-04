@@ -14,7 +14,7 @@ const AdminPaymentsPage = () => {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:8081/api/payments');
+      const res = await axios.get(window.API_BASE_URL + '/api/payments');
       setPayments(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       setPayments([]);
@@ -25,7 +25,7 @@ const AdminPaymentsPage = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this payment?')) return;
     try {
-      await axios.delete(`http://localhost:8081/api/payments/${id}`);
+      await axios.delete(`${window.API_BASE_URL}/api/payments/${id}`);
       setPayments(payments.filter(payment => payment.id !== id));
     } catch (e) {
       alert('Failed to delete payment.');

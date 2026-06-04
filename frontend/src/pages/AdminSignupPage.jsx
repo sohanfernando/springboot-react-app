@@ -21,7 +21,7 @@ export default function AdminSignupPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.post("http://localhost:8081/users/signup", {
+      const response = await axios.post(window.API_BASE_URL + "/users/signup", {
         name,
         email,
         password,

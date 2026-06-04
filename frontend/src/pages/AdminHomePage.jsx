@@ -22,10 +22,10 @@ const AdminHomePage = () => {
     const fetchStats = async () => {
       try {
         const [productsRes, ordersRes, usersRes, paymentsRes] = await Promise.all([
-          axios.get('http://localhost:8081/admin/products'),
-          axios.get('http://localhost:8081/api/orders'),
-          axios.get('http://localhost:8081/users'),
-          axios.get('http://localhost:8081/api/payments'),
+          axios.get(window.API_BASE_URL + '/admin/products'),
+          axios.get(window.API_BASE_URL + '/api/orders'),
+          axios.get(window.API_BASE_URL + '/users'),
+          axios.get(window.API_BASE_URL + '/api/payments'),
         ]);
         setStats({
           products: Array.isArray(productsRes.data) ? productsRes.data.length : (Array.isArray(productsRes.data.content) ? productsRes.data.content.length : 0),

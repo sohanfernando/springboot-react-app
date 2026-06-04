@@ -28,7 +28,7 @@ const ProfilePage = () => {
 
   const handleSave = async () => {
     try {
-      const res = await axios.patch(`http://localhost:8081/users/${user.id}`, formData);
+      const res = await axios.patch(`${window.API_BASE_URL}/users/${user.id}`, formData);
       login(res.data); // update user context and localStorage
       setIsEditing(false);
     } catch (e) {

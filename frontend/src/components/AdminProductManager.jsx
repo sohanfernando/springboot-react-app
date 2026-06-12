@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash, FaPlus, FaSearch, FaBoxOpen, FaTimes } from 'react-icons/fa';
+import { useToast } from '../context/ToastContext';
 
 const CATEGORY_MAP = {
   Men: ['T-Shirts', 'Shirts', 'Shorts', 'Joggers & Pants'],
@@ -20,6 +21,7 @@ const initialForm = {
 };
 
 function AdminProductManager() {
+  const { showToast } = useToast();
   const [category, setCategory] = useState('Men');
   const [subcategory, setSubcategory] = useState('T-Shirts');
   const [products, setProducts] = useState([]);
@@ -170,7 +172,7 @@ function AdminProductManager() {
       await axios.delete(`/admin/products/${id}`);
       fetchProducts();
     } catch {
-      alert('Failed to delete.');
+      showToast('Failed to delete.', 'error');
     }
   };
 

@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
 import loginImage from '../assets/T-shirts/Men/1.jpg'; // Using one of the hero images
 
@@ -14,6 +15,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { showToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -33,10 +35,10 @@ const LoginPage = () => {
       
       // Check the user's role and navigate accordingly
       if (response.data.role === "ADMIN") {
-        alert("Welcome Admin! Redirecting to admin dashboard...");
+        showToast("Welcome Admin! Redirecting to admin dashboard...", "success");
         navigate("/admin");
       } else {
-        alert("Login successful! Redirecting to home...");
+        showToast("Login successful! Redirecting to home...", "success");
         navigate("/");
       }
     } catch (err) {

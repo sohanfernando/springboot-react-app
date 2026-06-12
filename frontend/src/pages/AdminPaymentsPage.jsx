@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import AdminNavbar from '../components/AdminNavbar';
+import { useToast } from '../context/ToastContext';
 
 const AdminPaymentsPage = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchPayments();
@@ -28,7 +30,7 @@ const AdminPaymentsPage = () => {
       await axios.delete(`${window.API_BASE_URL}/api/payments/${id}`);
       setPayments(payments.filter(payment => payment.id !== id));
     } catch {
-      alert('Failed to delete payment.');
+      showToast('Failed to delete payment.', 'error');
     }
   };
 

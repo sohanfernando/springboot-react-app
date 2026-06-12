@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import AdminNavbar from '../components/AdminNavbar';
+import { useToast } from '../context/ToastContext';
 
 const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchOrders();
@@ -29,7 +31,7 @@ const AdminOrdersPage = () => {
       await axios.delete(`${window.API_BASE_URL}/api/orders/${id}`);
       setOrders(orders.filter(order => order.id !== id));
     } catch {
-      alert('Failed to delete order.');
+      showToast('Failed to delete order.', 'error');
     }
   };
 
@@ -52,8 +54,9 @@ const AdminOrdersPage = () => {
       if (selectedOrder && selectedOrder.id === order.id) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
+      showToast('Order status updated successfully!', 'success');
     } catch {
-      alert('Failed to update order status.');
+      showToast('Failed to update order status.', 'error');
     }
   };
 

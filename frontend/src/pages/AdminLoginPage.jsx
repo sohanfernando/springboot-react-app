@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link, useNavigate } from 'react-router-dom';
 import AdminNavbar from '../components/AdminNavbar';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaCrown } from 'react-icons/fa';
 import loginImage from '../assets/T-shirts/Men/11.webp';
 
@@ -14,6 +15,7 @@ const AdminLoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { loginAdmin } = useAuth();
+  const { showToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +32,7 @@ const AdminLoginPage = () => {
         return;
       }
       loginAdmin(response.data);
-      alert("Welcome Admin! Redirecting to admin dashboard...");
+      showToast("Welcome Admin! Redirecting to admin dashboard...", "success");
       navigate("/admin");
     } catch (err) {
       setError(

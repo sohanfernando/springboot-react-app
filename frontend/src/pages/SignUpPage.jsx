@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaCrown } from 'react-icons/fa';
 import signupImage from '../assets/T-shirts/Women/5.webp'; // Using one of the hero images
 
@@ -15,6 +16,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { showToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,10 +38,10 @@ export default function SignUpPage() {
       
       // Check the user's role and navigate accordingly
       // if (response.data.role === "ADMIN") {
-      //   alert("Admin account created! Redirecting to admin dashboard...");
+      //   showToast("Admin account created! Redirecting to admin dashboard...", "success");
       //   navigate("/admin");
       // } else {
-        alert("Account created! Redirecting to home...");
+        showToast("Account created! Redirecting to home...", "success");
         navigate("/");
       // }
     } catch (err) {

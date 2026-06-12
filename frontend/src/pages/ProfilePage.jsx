@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import axios from 'axios';
 
 const ProfilePage = () => {
   const { user, login } = useAuth();
+  const { showToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -31,8 +33,9 @@ const ProfilePage = () => {
       const res = await axios.patch(`${window.API_BASE_URL}/users/${user.id}`, formData);
       login(res.data); // update user context and localStorage
       setIsEditing(false);
+      showToast('Profile updated successfully!', 'success');
     } catch {
-      alert('Failed to update profile.');
+      showToast('Failed to update profile.', 'error');
     }
   };
 

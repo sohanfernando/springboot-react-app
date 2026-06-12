@@ -44,6 +44,7 @@ public class UserController {
         }
         var user = userOpt.get();
         if (updatedUser.getName() != null) user.setName(updatedUser.getName());
+        if (updatedUser.getEmail() != null) user.setEmail(updatedUser.getEmail());
         if (updatedUser.getPhone() != null) user.setPhone(updatedUser.getPhone());
         if (updatedUser.getAddress() != null) user.setAddress(updatedUser.getAddress());
         if (updatedUser.getCity() != null) user.setCity(updatedUser.getCity());

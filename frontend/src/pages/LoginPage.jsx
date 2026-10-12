@@ -1,198 +1,140 @@
-import React, { useState } from 'react'
-import axios from "axios";
-import { Link, useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar';
+import React, { useLayoutEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
-import loginImage from '../assets/T-shirts/Men/1.jpg'; // Using one of the hero images
+import { gsap, reveal } from '../lib/motion';
+import { Button, Field } from '../components/ui/Primitives';
+import loginImage from '../assets/T-shirts/Men/1.jpg';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const { login } = useAuth();
   const { showToast } = useToast();
+  const rootRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      reveal('.auth-item', { stagger: 0.08, y: 40, start: 'top 98%', trigger: rootRef.current });
+    }, rootRef);
+    return () => ctx.revert();
+  }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
-      const response = await axios.post(window.API_BASE_URL + "/users/login", {
-        email,
-        password,
-      });
-
-      console.log("Login successful:", response.data);
-      
-      // Use auth context to login
+      const response = await axios.post(`${window.API_BASE_URL}/users/login`, { email, password });
       login(response.data);
-      
-      // Check the user's role and navigate accordingly
-      if (response.data.role === "ADMIN") {
-        showToast("Welcome Admin! Redirecting to admin dashboard...", "success");
-        navigate("/admin");
+
+      if (response.data.role === 'ADMIN') {
+        showToast('Welcome back, admin', 'success');
+        navigate('/admin');
       } else {
-        showToast("Login successful! Redirecting to home...", "success");
-        navigate("/");
+        showToast('Welcome back', 'success');
+        navigate('/');
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
+      setError(err.response?.data?.message || 'Those details did not match. Please try again.');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className='min-h-screen flex flex-col bg-gray-50'>
-      <Navbar />
-      <div className="flex-grow flex items-center justify-center p-4 pt-32">
-        <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden">
-          <div className="flex flex-col lg:flex-row">
-            {/* Image Section */}
-            <div className="lg:w-1/2 relative">
-              <img
-                src={loginImage}
-                alt="Fashion Model"
-                className="w-full h-[82vh] object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-8 left-8 right-8 text-white">
-                <h2 className="text-3xl font-bold mb-2">Welcome Back</h2>
-                <p className="text-lg opacity-90">Sign in to continue your fashion journey</p>
-              </div>
-            </div>
+    <div ref={rootRef} className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+      {/* Plate */}
+      <div className="relative hidden lg:block bg-void overflow-hidden">
+        <img src={loginImage} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/50" />
+        <div className="absolute inset-0 flex flex-col justify-end p-12 xl:p-16">
+          <p className="text-white/40 text-[10px] tracking-eyebrow uppercase mb-5">Members</p>
+          <h2 className="font-playfair text-white text-4xl xl:text-5xl font-light leading-[1.1] max-w-md">
+            Your bag, your saved pieces, exactly where you left them.
+          </h2>
+        </div>
+      </div>
 
-            {/* Form Section */}
-            <div className="lg:w-1/2 p-8 lg:p-12">
-              <div className="max-w-md mx-auto">
-                {/* Header */}
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <FaUser className="text-white text-2xl" />
-                  </div>
-                  <h1 className="text-3xl font-bold text-gray-800 mb-2">Sign In</h1>
-                  <p className="text-gray-600">Access your FashionHub account</p>
-                </div>
-
-                {/* Error Message */}
-                {error && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center">
-                    <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                    {error}
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Email Input */}
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      <FaEnvelope />
-                    </div>
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                      required
-                    />
-                  </div>
-
-                  {/* Password Input */}
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      <FaLock />
-                    </div>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                      required
-                      minLength="6"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showPassword ? <FaEyeSlash /> : <FaEye />}
-                    </button>
-                  </div>
-
-                  {/* Forgot Password */}
-                  <div className="text-right">
-                    <a href="#" className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors">
-                      Forgot password?
-                    </a>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-semibold transition-all duration-300 hover:from-red-600 hover:to-red-700 hover:shadow-lg hover:shadow-red-500/25 transform hover:scale-[1.02] ${
-                      loading ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center">
-                        <svg
-                          className="animate-spin h-5 w-5 mr-3 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Signing In...
-                      </span>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </button>
-                </form>
-
-                {/* Sign Up Link */}
-                <div className='text-center'>
-                  <p className='text-gray-600'>
-                    Don't have an account?{" "}
-                    <Link
-                      to="/signup"
-                      className="text-red-600 hover:text-red-700 font-semibold transition-colors"
-                    >
-                      Create one now
-                    </Link>
-                  </p>
-                </div>
-              </div>
-            </div>
+      {/* Form */}
+      <div className="flex items-center justify-center px-4 sm:px-8 py-28 md:py-32">
+        <div className="w-full max-w-sm">
+          <div className="auth-item mb-3">
+            <p className="text-[10px] tracking-eyebrow uppercase text-black/30">Welcome back</p>
           </div>
+
+          <h1 className="auth-item font-playfair text-4xl md:text-5xl font-light mb-10">
+            Sign In
+          </h1>
+
+          {error && (
+            <p className="auth-item mb-7 border-l-2 border-destructive pl-4 py-2 text-[12px] text-destructive">
+              {error}
+            </p>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <div className="auth-item">
+              <Field
+                label="Email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div className="auth-item">
+              <Field label="Password">
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full h-12 px-4 pr-12 bg-white border border-line text-sm text-black placeholder:text-black/25 focus:outline-none focus:border-black transition-colors duration-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 hover:text-black transition-colors duration-300"
+                  >
+                    {showPassword ? <EyeOff size={15} strokeWidth={1.5} /> : <Eye size={15} strokeWidth={1.5} />}
+                  </button>
+                </div>
+              </Field>
+            </div>
+
+            <div className="auth-item mt-2">
+              <Button type="submit" disabled={loading} className="w-full !px-4 h-14">
+                {loading ? 'Signing in…' : 'Sign In'}
+              </Button>
+            </div>
+          </form>
+
+          <p className="auth-item mt-10 pt-8 border-t border-line text-[11px] tracking-label uppercase text-black/40">
+            New here?{' '}
+            <Link to="/signup" className="text-black pb-0.5 border-b border-black">
+              Create an account
+            </Link>
+          </p>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LoginPage
+export default LoginPage;

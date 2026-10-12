@@ -5,7 +5,7 @@ const getBackendUrl = () => {
   if (origin.includes('-frontend-')) {
     return origin.replace('-frontend-', '-backend-');
   }
-  return 'http://localhost:8081';
+  return 'http://localhost:8080';
 };
 
 export const API_BASE_URL = getBackendUrl();

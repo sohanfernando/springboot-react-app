@@ -1,4 +1,4 @@
-# ChallengeApp
+# Backend
 
 A full-stack e-commerce web application with a Spring Boot backend and React frontend.
 
@@ -18,16 +18,16 @@ A full-stack e-commerce web application with a Spring Boot backend and React fro
 ## Project Structure
 ```
 app/
-  challengeApp/   # Spring Boot backend
+  backend/   # Spring Boot backend
   frontend/       # React frontend
 ```
 
 ## Setup Instructions
 
 ### Backend (Spring Boot)
-1. Navigate to `challengeApp` directory:
+1. Navigate to `backend` directory:
    ```sh
-   cd challengeApp
+   cd backend
    ```
 2. Configure your MySQL database in `src/main/resources/application.properties`.
 3. Build and run the backend:
@@ -69,7 +69,7 @@ This application uses **Stripe** for secure payment processing.
 
 ### Quick Setup
 1. Get your Stripe API keys from [Stripe Dashboard](https://dashboard.stripe.com)
-2. Configure backend: Update `challengeApp/src/main/resources/application.properties` with your Stripe secret key
+2. Configure backend: Update `backend/src/main/resources/application.properties` with your Stripe secret key
 3. Configure frontend: Update `frontend/src/pages/PaymentPage.jsx` with your Stripe publishable key
 4. See `STRIPE_SETUP.md` for detailed setup instructions
 
@@ -79,7 +79,7 @@ This application uses **Stripe** for secure payment processing.
 - Secure payment processing with Stripe Elements
 
 ## Notes
-- Product images are stored in `challengeApp/uploads/products/`
+- Product images are stored in `backend/uploads/products/`
 - Update CORS settings in backend if deploying to production
 - **Important:** Configure Stripe API keys before testing payments (see `STRIPE_SETUP.md`)
 

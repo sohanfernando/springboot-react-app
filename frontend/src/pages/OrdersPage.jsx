@@ -1,194 +1,192 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaBox, FaTruck, FaCheckCircle, FaClock, FaEye } from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { gsap, reveal, getImageUrl, formatPrice } from '../lib/motion';
+import {
+  Container,
+  PageHeader,
+  Eyebrow,
+  ButtonLink,
+  EmptyState,
+  Spinner,
+} from '../components/ui/Primitives';
+
+const STATUS_LABEL = {
+  delivered: 'Delivered',
+  shipped: 'Shipped',
+  confirmed: 'Confirmed',
+  processing: 'Processing',
+};
+
+const parseItems = (items) => {
+  if (Array.isArray(items)) return items;
+  if (typeof items === 'string') {
+    try {
+      const parsed = JSON.parse(items);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
 
 const OrdersPage = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const rootRef = useRef(null);
 
   useEffect(() => {
-    if (!user) return;
-    const fetchOrders = async () => {
+    if (!user) {
+      setLoading(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const load = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(window.API_BASE_URL + '/api/orders');
-        // Filter orders for this user
-        const userOrders = Array.isArray(res.data)
-          ? res.data.filter(order => order.userId === user.id)
+        const res = await axios.get(`${window.API_BASE_URL}/api/orders`);
+        const mine = Array.isArray(res.data)
+          ? res.data.filter((order) => order.userId === user.id)
           : [];
-        setOrders(userOrders);
+        if (!cancelled) setOrders(mine);
       } catch {
-        setOrders([]);
+        if (!cancelled) setOrders([]);
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     };
-    fetchOrders();
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'delivered':
-        return <FaCheckCircle className="text-green-500" />;
-      case 'shipped':
-        return <FaTruck className="text-blue-500" />;
-      case 'confirmed':
-        return <FaCheckCircle className="text-blue-500" />;
-      case 'processing':
-        return <FaClock className="text-yellow-500" />;
-      default:
-        return <FaBox className="text-gray-500" />;
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'delivered':
-        return 'Delivered';
-      case 'shipped':
-        return 'Shipped';
-      case 'confirmed':
-        return 'Order Confirmed';
-      case 'processing':
-        return 'Processing';
-      default:
-        return 'Unknown';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'delivered':
-        return 'text-green-600 bg-green-100';
-      case 'shipped':
-        return 'text-blue-600 bg-blue-100';
-      case 'confirmed':
-        return 'text-blue-600 bg-blue-100';
-      case 'processing':
-        return 'text-yellow-600 bg-yellow-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
-    }
-  };
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      reveal('.order-row', { stagger: 0.08, y: 40, start: 'top 92%', trigger: rootRef.current });
+    }, rootRef);
+    return () => ctx.revert();
+  }, [orders.length]);
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="pt-32 pb-16">
-          <div className="max-w-4xl mx-auto px-4 text-center">
-            <h1 className="text-2xl font-bold text-gray-800 mb-4">Please log in to view your orders</h1>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors"
-            >
-              Go to Login
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
+      <>
+        <PageHeader eyebrow="Account" title="Orders" />
+        <Container>
+          <EmptyState
+            eyebrow="Sign in required"
+            title="Your orders live behind the door"
+            body="Sign in to see everything you've ordered and where it is."
+            action={<ButtonLink to="/login">Sign In</ButtonLink>}
+          />
+        </Container>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="pt-32 pb-16">
-        <div className="max-w-6xl mx-auto px-4">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">My Orders</h1>
-            <p className="text-gray-600">Track your order history and current orders</p>
-          </div>
+    <div ref={rootRef}>
+      <PageHeader
+        eyebrow="Account"
+        title="Orders"
+        meta={loading ? 'Loading' : `${orders.length} ${orders.length === 1 ? 'order' : 'orders'}`}
+      />
 
-          {loading ? (
-            <div className="text-center py-16 text-gray-500">Loading orders...</div>
-          ) : orders.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FaBox className="text-gray-400 text-3xl" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">No Orders Yet</h2>
-              <p className="text-gray-600 mb-8">Start shopping to see your orders here.</p>
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 bg-red-500 text-white px-8 py-3 rounded-lg hover:bg-red-600 transition-colors"
-              >
-                Start Shopping
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {orders.map((order) => (
-                <div key={order.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  {/* Order Header */}
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <Container className="pb-24 md:pb-36">
+        {(() => {
+          if (loading) return <Spinner label="Loading orders" />;
+
+          if (!orders.length) {
+            return (
+              <EmptyState
+                eyebrow="No history"
+                title="You haven't ordered yet"
+                body="Once you place an order it will appear here with its progress."
+                action={<ButtonLink to="/latest">Start Shopping</ButtonLink>}
+              />
+            );
+          }
+
+          return (
+            <div className="border-t border-line">
+              {orders.map((order) => {
+                const items = parseItems(order.items);
+                const label = STATUS_LABEL[order.status] || 'Placed';
+
+                return (
+                  <article key={order.id} className="order-row py-8 border-b border-line">
+                    <div className="flex flex-wrap items-baseline justify-between gap-4 mb-6">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-800">Order {order.id}</h3>
-                        {/* <p className="text-gray-600">Placed on {new Date(order.date).toLocaleDateString()}</p> */}
+                        <Eyebrow>Order</Eyebrow>
+                        <p className="font-playfair text-xl font-light mt-1.5">#{order.id}</p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                          {getStatusIcon(order.status)}
-                          {getStatusText(order.status)}
-                        </div>
-                        <span className="text-lg font-bold text-gray-800">Rs {order.total}</span>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Order Items */}
-                  <div className="p-6">
-                    <div className="space-y-4">
-                      {(() => {
-                        let items = order.items;
-                        if (typeof items === 'string') {
-                          try { items = JSON.parse(items); } catch { items = []; }
-                        }
-                        return Array.isArray(items) ? items.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between py-2">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                                {item.image ? (
-                                  <img
-                                    src={
-                                      item.image.startsWith('http')
-                                        ? item.image
-                                        : `${window.API_BASE_URL}/uploads/products/${item.image.replace(/^\/uploads\/products\//, '')}`
-                                    }
-                                    alt={item.title || item.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <FaBox className="text-gray-400" />
-                                )}
-                              </div>
-                              <div>
-                                <h4 className="font-medium text-gray-800">{item.title || item.name}</h4>
-                                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                              </div>
-                            </div>
-                            <span className="font-medium text-gray-800">Rs {item.price}</span>
-                          </div>
-                        )) : null;
-                      })()}
+                      <div className="flex items-center gap-6">
+                        <span className="flex items-center gap-2.5 text-[10px] tracking-label uppercase text-black/50">
+                          <span
+                            className={`w-1.5 h-1.5 ${
+                              order.status === 'delivered' ? 'bg-black' : 'bg-black/25'
+                            }`}
+                          />
+                          {label}
+                        </span>
+                        <span className="text-sm tabular-nums">{formatPrice(order.total)}</span>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+
+                    <div className="flex flex-col gap-4">
+                      {items.map((item, i) => (
+                        <div key={i} className="flex items-center gap-4">
+                          <div className="relative w-14 h-[70px] shrink-0 overflow-hidden bg-muted">
+                            {getImageUrl(item.image) ? (
+                              <img
+                                src={getImageUrl(item.image)}
+                                alt={item.title || item.name}
+                                className="absolute inset-0 w-full h-full object-cover object-top"
+                              />
+                            ) : (
+                              <span className="absolute inset-0 flex items-center justify-center font-playfair text-black/15">
+                                {(item.title || item.name || '?').charAt(0)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-medium truncate">{item.title || item.name}</p>
+                            <p className="text-[10px] tracking-label uppercase text-black/35 mt-1">
+                              {[item.selectedColor || item.color, item.selectedSize || item.sizes?.[0]]
+                                .filter(Boolean)
+                                .join(' · ')}
+                              {item.quantity ? ` · Qty ${item.quantity}` : ''}
+                            </p>
+                          </div>
+
+                          <span className="text-[13px] tabular-nums shrink-0">
+                            {formatPrice(item.price)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {(order.address || order.city) && (
+                      <p className="mt-6 text-[11px] text-black/35">
+                        Shipping to {[order.recipientName, order.address, order.city, order.postalCode]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    )}
+                  </article>
+                );
+              })}
             </div>
-          )}
-        </div>
-      </div>
-      <Footer />
+          );
+        })()}
+      </Container>
     </div>
   );
 };
 
-export default OrdersPage; 
+export default OrdersPage;

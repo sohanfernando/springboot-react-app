@@ -1,75 +1,48 @@
 import React, { useEffect } from 'react';
-import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimes } from 'react-icons/fa';
+import { Check, AlertCircle, Info, X } from 'lucide-react';
 
+const ICONS = {
+  success: Check,
+  error: AlertCircle,
+  info: Info,
+};
+
+/**
+ * One toast style for the whole app. It used to render two ways — a refined
+ * one for the storefront and the original rounded/coloured one for admin —
+ * but the admin now shares the same design language, so the branch is gone.
+ */
 const Toast = ({ message, type = 'success', onClose, duration = 3000 }) => {
   useEffect(() => {
     if (duration > 0) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, duration);
+      const timer = setTimeout(onClose, duration);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [duration, onClose]);
 
-  const getIcon = () => {
-    switch (type) {
-      case 'success':
-        return <FaCheckCircle className="text-green-500" />;
-      case 'error':
-        return <FaExclamationCircle className="text-red-500" />;
-      case 'info':
-        return <FaInfoCircle className="text-blue-500" />;
-      default:
-        return <FaCheckCircle className="text-green-500" />;
-    }
-  };
-
-  const getBgColor = () => {
-    switch (type) {
-      case 'success':
-        return 'bg-green-50 border-green-200';
-      case 'error':
-        return 'bg-red-50 border-red-200';
-      case 'info':
-        return 'bg-blue-50 border-blue-200';
-      default:
-        return 'bg-green-50 border-green-200';
-    }
-  };
-
-  const getTextColor = () => {
-    switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
-      case 'info':
-        return 'text-blue-800';
-      default:
-        return 'text-green-800';
-    }
-  };
+  const Icon = ICONS[type] || Check;
+  const isError = type === 'error';
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-2 ${getBgColor()} min-w-[300px] max-w-md`}
       role="alert"
-      style={{
-        animation: 'slideInRight 0.3s ease-out',
-      }}
+      className={`flex items-center gap-4 min-w-[280px] max-w-sm px-5 py-4 border font-inter ${
+        isError ? 'bg-white text-rose-600 border-rose-500' : 'bg-void text-white border-void'
+      }`}
+      style={{ animation: 'slideInRight 0.4s cubic-bezier(0.76, 0, 0.24, 1)' }}
     >
-      <div className="flex-shrink-0 text-xl">{getIcon()}</div>
-      <p className={`flex-1 font-medium ${getTextColor()}`}>{message}</p>
+      <Icon size={15} strokeWidth={1.6} className="shrink-0" />
+      <p className="flex-1 text-[11px] tracking-label uppercase leading-relaxed">{message}</p>
       <button
         onClick={onClose}
-        className={`flex-shrink-0 ${getTextColor()} hover:opacity-70 transition-opacity`}
-        aria-label="Close"
+        aria-label="Dismiss"
+        className="shrink-0 opacity-40 hover:opacity-100 transition-opacity duration-200"
       >
-        <FaTimes />
+        <X size={14} strokeWidth={1.6} />
       </button>
     </div>
   );
 };
 
 export default Toast;
-

@@ -1,105 +1,163 @@
-import React from 'react';
-import AdminNavbar from '../components/AdminNavbar';
-import AdminFooter from '../components/AdminFooter';
-import AdminProductManager from '../components/AdminProductManager';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { FaSignOutAlt, FaUserShield, FaBoxOpen, FaUsers, FaClipboardList, FaMoneyCheckAlt } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { Package, ClipboardList, CreditCard, Users, ArrowRight } from 'lucide-react';
+import { formatPrice } from '../lib/format';
+import {
+  Card,
+  PageHeading,
+  Table,
+  Row,
+  Cell,
+  Status,
+  Loading,
+  ButtonLink,
+} from '../components/admin/AdminUI';
+
+const countOf = (data) => {
+  if (Array.isArray(data)) return data.length;
+  if (Array.isArray(data?.content)) return data.content.length;
+  return 0;
+};
+
+const listOf = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.content)) return data.content;
+  return [];
+};
+
+const TILES = [
+  { key: 'products', label: 'Products', icon: Package, to: '/admin/catalog', action: 'Manage catalogue' },
+  { key: 'orders', label: 'Orders', icon: ClipboardList, to: '/admin/orders', action: 'Manage orders' },
+  { key: 'payments', label: 'Payments', icon: CreditCard, to: '/admin/payments', action: 'View payments' },
+  { key: 'users', label: 'Customers', icon: Users, to: '/admin/users', action: 'View customers' },
+];
 
 const AdminHomePage = () => {
-  const { admin } = useAuth();
-  const navigate = useNavigate();
-  const [stats, setStats] = React.useState({ products: 0, orders: 0, users: 0, payments: 0 });
+  const [stats, setStats] = useState({ products: 0, orders: 0, users: 0, payments: 0 });
+  const [revenue, setRevenue] = useState(0);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
-    if (!admin || admin.role !== 'ADMIN') {
-      navigate('/admin-login');
-    }
-  }, [admin, navigate]);
+  useEffect(() => {
+    let cancelled = false;
 
-  React.useEffect(() => {
-    const fetchStats = async () => {
+    const load = async () => {
+      setLoading(true);
       try {
-        const [productsRes, ordersRes, usersRes, paymentsRes] = await Promise.all([
-          axios.get(window.API_BASE_URL + '/admin/products'),
-          axios.get(window.API_BASE_URL + '/api/orders'),
-          axios.get(window.API_BASE_URL + '/users'),
-          axios.get(window.API_BASE_URL + '/api/payments'),
+        const [products, orders, users, payments] = await Promise.all([
+          axios.get('/admin/products'),
+          axios.get('/api/orders'),
+          axios.get('/users'),
+          axios.get('/api/payments'),
         ]);
+        if (cancelled) return;
+
         setStats({
-          products: Array.isArray(productsRes.data) ? productsRes.data.length : (Array.isArray(productsRes.data.content) ? productsRes.data.content.length : 0),
-          orders: Array.isArray(ordersRes.data) ? ordersRes.data.length : (Array.isArray(ordersRes.data.content) ? ordersRes.data.content.length : 0),
-          users: Array.isArray(usersRes.data) ? usersRes.data.length : (Array.isArray(usersRes.data.content) ? usersRes.data.content.length : 0),
-          payments: Array.isArray(paymentsRes.data) ? paymentsRes.data.length : (Array.isArray(paymentsRes.data.content) ? paymentsRes.data.content.length : 0),
+          products: countOf(products.data),
+          orders: countOf(orders.data),
+          users: countOf(users.data),
+          payments: countOf(payments.data),
         });
+
+        // Only settled payments count toward takings.
+        setRevenue(
+          listOf(payments.data)
+            .filter((p) => String(p.paymentStatus || '').toLowerCase() === 'success')
+            .reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+        );
+
+        setRecentOrders([...listOf(orders.data)].sort((a, b) => b.id - a.id).slice(0, 6));
       } catch {
-        setStats({ products: 0, orders: 0, users: 0 });
+        if (!cancelled) {
+          setStats({ products: 0, orders: 0, users: 0, payments: 0 });
+          setRecentOrders([]);
+        }
       }
+      if (!cancelled) setLoading(false);
     };
-    fetchStats();
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  if (!admin || admin.role !== 'ADMIN') {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-blue-900 to-purple-900">
-      <AdminNavbar />
-      {/* Stat Cards */}
-      <div className="max-w-7xl mx-auto px-4 pt-12 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 transition-transform">
-            <FaBoxOpen className="text-5xl text-purple-600 mb-3" />
-            <span className="text-4xl font-extrabold text-purple-700 mb-1">{stats.products}</span>
-            <span className="text-lg font-semibold text-gray-700">Products</span>
-            <span className="text-xs text-gray-400 mt-2">All products in your store</span>
-          </div>
-          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 transition-transform">
-            <FaClipboardList className="text-5xl text-blue-600 mb-3" />
-            <span className="text-4xl font-extrabold text-blue-700 mb-1">{stats.orders}</span>
-            <span className="text-lg font-semibold text-gray-700">Orders</span>
-            <button
-              className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
-              onClick={() => navigate('/admin/orders')}
-            >
-              Manage Orders
-            </button>
-          </div>
-          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 transition-transform">
-            <FaMoneyCheckAlt className="text-5xl text-pink-600 mb-3" />
-            <span className="text-4xl font-extrabold text-pink-700 mb-1">{stats.payments}</span>
-            <span className="text-lg font-semibold text-gray-700">Payments</span>
-            <button
-              className="mt-4 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-semibold transition"
-              onClick={() => navigate('/admin/payments')}
-            >
-              Manage Payments
-            </button>
-          </div>
-          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 transition-transform">
-            <FaUsers className="text-5xl text-green-600 mb-3" />
-            <span className="text-4xl font-extrabold text-green-700 mb-1">{stats.users}</span>
-            <span className="text-lg font-semibold text-gray-700">Users</span>
-            <button
-              className="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition"
-              onClick={() => navigate('/admin/users')}
-            >
-              View User Details
-            </button>
-          </div>
-        </div>
-        {/* Admin Product Manager Section */}
-        <div className="w-full flex justify-center py-6">
-          <div className="w-[98%] min-h-[60vh] bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-3xl overflow-hidden flex items-center justify-center shadow-2xl">
-            <AdminProductManager />
-          </div>
-        </div>
+    <>
+      <PageHeading
+        eyebrow="Overview"
+        title="Dashboard"
+        meta={loading ? 'Loading' : `${formatPrice(revenue)} collected across ${stats.payments} payments`}
+      />
+
+      {/* Counts */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        {TILES.map((tile) => (
+          <Link key={tile.key} to={tile.to} className="group">
+            <Card className="h-full p-5 transition-colors duration-200 group-hover:border-black">
+              <div className="flex items-start justify-between mb-6">
+                <tile.icon size={17} strokeWidth={1.5} className="text-black/35" />
+                <ArrowRight
+                  size={14}
+                  strokeWidth={1.5}
+                  className="text-black/20 group-hover:text-black group-hover:translate-x-1 transition-all duration-200"
+                />
+              </div>
+              <p className="text-3xl font-light tabular-nums leading-none mb-2">
+                {loading ? '—' : stats[tile.key]}
+              </p>
+              <p className="text-[10px] tracking-label uppercase text-black/40">{tile.label}</p>
+            </Card>
+          </Link>
+        ))}
       </div>
-      <AdminFooter />
-    </div>
+
+      {/* Takings */}
+      <Card className="p-5 mb-8 flex flex-wrap items-baseline justify-between gap-4">
+        <div>
+          <p className="text-[10px] tracking-label uppercase text-black/40 mb-2">Revenue collected</p>
+          <p className="text-2xl font-light tabular-nums">
+            {loading ? '—' : formatPrice(revenue)}
+          </p>
+        </div>
+        <p className="text-[11px] text-black/40 max-w-sm">
+          Successful payments only. Pending and failed attempts are excluded.
+        </p>
+      </Card>
+
+      {/* Recent orders */}
+      <div className="flex items-end justify-between mb-4">
+        <h2 className="text-[11px] tracking-label uppercase text-black/45">Latest orders</h2>
+        <ButtonLink to="/admin/orders" tone="quiet" size="sm">
+          All orders
+        </ButtonLink>
+      </div>
+
+      {loading ? (
+        <Card>
+          <Loading label="Loading orders" />
+        </Card>
+      ) : (
+        <Table
+          headers={['Order', 'Recipient', 'Destination', 'Status', 'Total']}
+          empty="No orders have been placed yet."
+        >
+          {recentOrders.map((order) => (
+            <Row key={order.id}>
+              <Cell className="tabular-nums text-black">#{order.id}</Cell>
+              <Cell>{order.recipientName || '—'}</Cell>
+              <Cell className="text-black/50">{order.city || '—'}</Cell>
+              <Cell>
+                <Status value={order.status || 'processing'} />
+              </Cell>
+              <Cell className="tabular-nums">{formatPrice(order.total)}</Cell>
+            </Row>
+          ))}
+        </Table>
+      )}
+    </>
   );
 };
 
-export default AdminHomePage; 
+export default AdminHomePage;

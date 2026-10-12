@@ -1,0 +1,45 @@
+package com.example.backend.controller;
+
+import com.example.backend.model.Order;
+import com.example.backend.service.OrderService;
+import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/orders")
+@AllArgsConstructor
+public class OrderController {
+    private final OrderService orderService;
+
+    @PostMapping
+    public ResponseEntity<Order> createOrder(@RequestBody Order order) {
+        // paymentId is now part of the Order model and will be saved automatically
+        return ResponseEntity.ok(orderService.createOrder(order));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Order>> getAllOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Order> updateOrderStatus(@PathVariable Long id, @RequestBody String status) {
+        Order order = orderService.getOrderById(id);
+        order.setStatus(status.replaceAll("\"", "")); // Remove quotes if sent as JSON string
+        return ResponseEntity.ok(orderService.createOrder(order));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
+        orderService.deleteOrder(id);
+        return ResponseEntity.ok().build();
+    }
+} 

@@ -1,23 +1,57 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import AdminNavbar from '../components/AdminNavbar';
+import { Trash2, Eye } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { getImageUrl, formatPrice } from '../lib/format';
+import {
+  Card,
+  PageHeading,
+  Table,
+  Row,
+  Cell,
+  Status,
+  Loading,
+  Button,
+  Input,
+  Select,
+  Modal,
+  ConfirmDialog,
+} from '../components/admin/AdminUI';
+
+const STATUSES = [
+  ['processing', 'Processing'],
+  ['confirmed', 'Confirmed'],
+  ['shipped', 'Shipped'],
+  ['delivered', 'Delivered'],
+];
+
+const parseItems = (items) => {
+  if (Array.isArray(items)) return items;
+  if (typeof items === 'string') {
+    try {
+      const parsed = JSON.parse(items);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
 
 const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const { showToast } = useToast();
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
 
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(window.API_BASE_URL + '/api/orders');
+      const res = await axios.get('/api/orders');
       setOrders(Array.isArray(res.data) ? res.data : []);
     } catch {
       setOrders([]);
@@ -25,138 +59,211 @@ const AdminOrdersPage = () => {
     setLoading(false);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this order?')) return;
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const { id } = pendingDelete;
+    setDeleting(true);
     try {
-      await axios.delete(`${window.API_BASE_URL}/api/orders/${id}`);
-      setOrders(orders.filter(order => order.id !== id));
+      await axios.delete(`/api/orders/${id}`);
+      setOrders((prev) => prev.filter((o) => o.id !== id));
+      if (selected?.id === id) setSelected(null);
+      setPendingDelete(null);
+      showToast('Order deleted', 'success');
     } catch {
-      showToast('Failed to delete order.', 'error');
+      showToast('Could not delete that order', 'error');
     }
+    setDeleting(false);
   };
 
-  const handleView = (order) => {
-    setSelectedOrder(order);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setSelectedOrder(null);
-  };
-
-  const handleStatusChange = async (order, newStatus) => {
+  const handleStatusChange = async (order, status) => {
     try {
-      await axios.patch(`${window.API_BASE_URL}/api/orders/${order.id}/status`, newStatus, {
+      await axios.patch(`/api/orders/${order.id}/status`, status, {
         headers: { 'Content-Type': 'text/plain' },
       });
-      setOrders(orders.map(o => o.id === order.id ? { ...o, status: newStatus } : o));
-      if (selectedOrder && selectedOrder.id === order.id) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus });
-      }
-      showToast('Order status updated successfully!', 'success');
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status } : o)));
+      setSelected((prev) => (prev && prev.id === order.id ? { ...prev, status } : prev));
+      showToast(`Order #${order.id} marked ${status}`, 'success');
     } catch {
-      showToast('Failed to update order status.', 'error');
+      showToast('Could not update the status', 'error');
     }
   };
 
+  const q = search.trim().toLowerCase();
+  const visible = orders.filter((order) => {
+    if (statusFilter !== 'all' && (order.status || 'processing') !== statusFilter) return false;
+    if (!q) return true;
+    return [order.id, order.recipientName, order.city, order.address, order.userId]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(q);
+  });
+
+  const selectedItems = parseItems(selected?.items);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminNavbar />
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold mb-8 text-blue-700">Manage Orders</h1>
-        {loading ? (
-          <div>Loading orders...</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-xl shadow-lg">
-              <thead>
-                <tr className="bg-blue-100 text-blue-700">
-                  <th className="p-4 text-left">Order ID</th>
-                  <th className="p-4 text-left">User ID</th>
-                  <th className="p-4 text-left">Recipient Name</th>
-                  <th className="p-4 text-left">Total</th>
-                  <th className="p-4 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map(order => (
-                  <tr key={order.id} className="border-b">
-                    <td className="p-4">{order.id}</td>
-                    <td className="p-4">{order.userId}</td>
-                    <td className="p-4">{order.recipientName}</td>
-                    <td className="p-4">Rs {order.total}</td>
-                    <td className="p-4 flex gap-2 items-center">
-                      <select
-                        value={order.status || 'processing'}
-                        onChange={e => handleStatusChange(order, e.target.value)}
-                        className="border rounded px-2 py-1 mr-2"
-                      >
-                        <option value="processing">Processing</option>
-                        <option value="confirmed">Order Confirmed</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                      </select>
-                      <button
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold"
-                        onClick={() => handleView(order)}
-                      >
-                        View
-                      </button>
-                      <button
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold"
-                        onClick={() => handleDelete(order.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {orders.length === 0 && (
-                  <tr><td colSpan={5} className="text-center p-8 text-gray-500">No orders found.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-      {/* Order Details Modal */}
-      {showModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-8 w-full max-w-lg relative">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-2xl"
-              onClick={closeModal}
-            >&times;</button>
-            <h2 className="text-2xl font-bold mb-4">Order Details</h2>
-            <div className="mb-2"><b>Order ID:</b> {selectedOrder.id}</div>
-            <div className="mb-2"><b>User ID:</b> {selectedOrder.userId}</div>
-            <div className="mb-2"><b>Recipient Name:</b> {selectedOrder.recipientName}</div>
-            <div className="mb-2"><b>Total:</b> Rs {selectedOrder.total}</div>
-            <div className="mb-2"><b>Address:</b> {selectedOrder.address}, {selectedOrder.city}, {selectedOrder.postalCode}</div>
-            <div className="mb-2"><b>Status:</b> {selectedOrder.status || 'processing'}</div>
-            <div className="mb-2"><b>Items:</b></div>
-            <ul className="list-disc pl-6">
-              {Array.isArray(selectedOrder.items)
-                ? selectedOrder.items.map((item, idx) => (
-                    <li key={idx}>{item.title} x {item.quantity}</li>
-                  ))
-                : (() => {
-                    try {
-                      const items = JSON.parse(selectedOrder.items);
-                      return items.map((item, idx) => (
-                        <li key={idx}>{item.title} x {item.quantity}</li>
-                      ));
-                    } catch {
-                      return <li>Could not parse items</li>;
-                    }
-                  })()}
-            </ul>
-          </div>
-        </div>
+    <>
+      <PageHeading
+        eyebrow="Fulfilment"
+        title="Orders"
+        meta={loading ? 'Loading' : `${visible.length} of ${orders.length} orders`}
+      >
+        <Input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search recipient, city, id"
+          className="w-56"
+        />
+        <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="all">All statuses</option>
+          {STATUSES.map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </Select>
+      </PageHeading>
+
+      {loading ? (
+        <Card><Loading label="Loading orders" /></Card>
+      ) : (
+        <Table
+          headers={['Order', 'Recipient', 'Destination', 'Total', 'Status', '']}
+          empty={q || statusFilter !== 'all' ? 'No orders match those filters.' : 'No orders yet.'}
+        >
+          {visible.map((order) => (
+            <Row key={order.id}>
+              <Cell className="tabular-nums text-black">#{order.id}</Cell>
+              <Cell>
+                <span className="block text-black">{order.recipientName || '—'}</span>
+                <span className="block text-[11px] text-black/40 tabular-nums">
+                  User {order.userId}
+                </span>
+              </Cell>
+              <Cell className="text-black/50 max-w-[16rem] truncate">
+                {[order.address, order.city, order.postalCode].filter(Boolean).join(', ') || '—'}
+              </Cell>
+              <Cell className="tabular-nums">{formatPrice(order.total)}</Cell>
+              <Cell>
+                <div className="flex items-center gap-3">
+                  <Status value={order.status || 'processing'} />
+                  <Select
+                    size="sm"
+                    value={order.status || 'processing'}
+                    onChange={(e) => handleStatusChange(order, e.target.value)}
+                    aria-label={`Status for order ${order.id}`}
+                  >
+                    {STATUSES.map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </Select>
+                </div>
+              </Cell>
+              <Cell>
+                <div className="flex items-center justify-end gap-2">
+                  <Button tone="outline" size="sm" onClick={() => setSelected(order)}>
+                    <Eye size={13} strokeWidth={1.6} />
+                    View
+                  </Button>
+                  <Button
+                    tone="danger"
+                    size="sm"
+                    onClick={() => setPendingDelete(order)}
+                    aria-label={`Delete order ${order.id}`}
+                  >
+                    <Trash2 size={13} strokeWidth={1.6} />
+                  </Button>
+                </div>
+              </Cell>
+            </Row>
+          ))}
+        </Table>
       )}
-    </div>
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete order"
+          confirmLabel="Delete order"
+          busy={deleting}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={confirmDelete}
+          body={
+            <>
+              Order <strong className="font-medium text-black">#{pendingDelete.id}</strong> for{' '}
+              <strong className="font-medium text-black">
+                {pendingDelete.recipientName || 'this customer'}
+              </strong>{' '}
+              will be permanently deleted. The payment record is not affected.
+            </>
+          }
+        />
+      )}
+
+      {selected && (
+        <Modal title={`Order #${selected.id}`} onClose={() => setSelected(null)}>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-5 pb-6 border-b border-line">
+            {[
+              ['Recipient', selected.recipientName],
+              ['Customer ID', selected.userId],
+              ['Status', selected.status || 'processing'],
+              ['Total', formatPrice(selected.total)],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <p className="text-[10px] tracking-label uppercase text-black/40 mb-1.5">{label}</p>
+                <p className="text-[13px]">{value ?? '—'}</p>
+              </div>
+            ))}
+            <div className="col-span-2">
+              <p className="text-[10px] tracking-label uppercase text-black/40 mb-1.5">
+                Shipping address
+              </p>
+              <p className="text-[13px] leading-relaxed">
+                {[selected.address, selected.city, selected.postalCode]
+                  .filter(Boolean)
+                  .join(', ') || '—'}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-[10px] tracking-label uppercase text-black/40 mt-6 mb-4">
+            {selectedItems.length} {selectedItems.length === 1 ? 'item' : 'items'}
+          </p>
+
+          <div className="flex flex-col gap-4">
+            {selectedItems.map((item, i) => (
+              <div key={`${item.id ?? 'item'}-${i}`} className="flex items-center gap-4">
+                <div className="relative w-12 h-14 shrink-0 bg-muted overflow-hidden">
+                  {getImageUrl(item.image) ? (
+                    <img
+                      src={getImageUrl(item.image)}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover object-top"
+                    />
+                  ) : null}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] truncate">{item.title || item.name}</p>
+                  <p className="text-[11px] text-black/40 mt-0.5">
+                    {[item.selectedColor || item.color, item.selectedSize || item.sizes?.[0]]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    {item.quantity ? ` · Qty ${item.quantity}` : ''}
+                  </p>
+                </div>
+                <span className="text-[13px] tabular-nums shrink-0">{formatPrice(item.price)}</span>
+              </div>
+            ))}
+            {selectedItems.length === 0 && (
+              <p className="text-[13px] text-black/40">Item details could not be read.</p>
+            )}
+          </div>
+        </Modal>
+      )}
+    </>
   );
 };
 
-export default AdminOrdersPage; 
+export default AdminOrdersPage;

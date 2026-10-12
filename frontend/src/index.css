@@ -6,113 +6,186 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Push Swiper pagination dots downward */
-.swiper-pagination {
-  margin-top: 40px !important;
-  position: relative !important;
+/* ==========================================================================
+   VELORA design tokens
+   Everything below that touches the document (scrollbar, body font) is
+   scoped to `html.velora`, which only the customer layout applies — the
+   admin side keeps its own look untouched.
+   ========================================================================== */
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #ededed;
+  --secondary-foreground: #000000;
+  --muted: #f5f5f5;
+  --muted-foreground: #6b6b6b;
+  --accent: #111111;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --border: #dadada;
+  --input: #dadada;
+  --ring: #000000;
+  --radius: 0rem;
+  --sidebar: #080808;
+  --sidebar-foreground: #ffffff;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-border: #2a2a2a;
+
+  --font-playfair: 'Playfair Display', Georgia, serif;
+  --font-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Custom Swiper Pagination Styles */
-.swiper-pagination-bullet {
-  width: 12px !important;
-  height: 12px !important;
-  background: rgba(255, 255, 255, 0.3) !important;
-  opacity: 1 !important;
-  transition: all 0.3s ease !important;
+/* --------------------------------------------------------------------------
+   Customer-side page chrome
+   -------------------------------------------------------------------------- */
+
+html.velora {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Lenis owns the scroll position — native smooth scrolling would fight it */
+  scroll-behavior: auto;
 }
 
-.swiper-pagination-bullet-active {
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  transform: scale(1.2) !important;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important;
+html.velora body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter);
+  overflow-x: hidden;
 }
 
-/* Section-specific pagination colors */
-.men-swiper .swiper-pagination-bullet-active {
-  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5) !important;
+html.velora ::-webkit-scrollbar {
+  width: 2px;
+}
+html.velora ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html.velora ::-webkit-scrollbar-thumb {
+  background: #000;
 }
 
-.women-swiper .swiper-pagination-bullet-active {
-  background: linear-gradient(135deg, #ec4899, #db2777) !important;
-  box-shadow: 0 0 20px rgba(236, 72, 153, 0.5) !important;
+html.velora ::selection {
+  background: #000;
+  color: #fff;
 }
 
-.accessories-swiper .swiper-pagination-bullet-active {
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5) !important;
+/* Lenis */
+html.lenis {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
 
-/* Custom Navigation Button Hover Effects */
-.swiper-button-prev-latest,
-.swiper-button-next-latest,
-.swiper-button-prev-men,
-.swiper-button-next-men,
-.swiper-button-prev-women,
-.swiper-button-next-women,
-.swiper-button-prev-accessories,
-.swiper-button-next-accessories {
-  transition: all 0.3s ease !important;
+/* --------------------------------------------------------------------------
+   Utilities
+   -------------------------------------------------------------------------- */
+
+.font-playfair {
+  font-family: var(--font-playfair);
 }
 
-.swiper-button-prev-latest:hover,
-.swiper-button-next-latest:hover,
-.swiper-button-prev-men:hover,
-.swiper-button-next-men:hover,
-.swiper-button-prev-women:hover,
-.swiper-button-next-women:hover,
-.swiper-button-prev-accessories:hover,
-.swiper-button-next-accessories:hover {
-  transform: translateY(-50%) scale(1.1) !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+/* Mask for SplitText line/char reveals — characters rise out of nothing */
+.split-line {
+  display: block;
+  overflow: hidden;
 }
 
-/* Smooth animations for section elements */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.clip-reveal {
+  clip-path: inset(0 100% 0 0);
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lineExpand {
+  0% { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes scrollDown {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+
+.animate-marquee {
+  animation: marquee 32s linear infinite;
+}
+.animate-scroll-down {
+  animation: scrollDown 2s ease-in-out infinite;
+}
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
+  animation: fadeUp 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-/* Toast animation */
+/* Toast slide-in (kept — referenced by the Toast component) */
 @keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(110%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
-/* Glassmorphism effect for cards */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+/* --------------------------------------------------------------------------
+   Swiper — restyled to the greyscale system (customer side only uses it)
+   -------------------------------------------------------------------------- */
+
+.velora-swiper .swiper-pagination {
+  position: relative !important;
+  margin-top: 32px !important;
 }
 
-/* Gradient text animation */
-@keyframes gradientShift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+.velora-swiper .swiper-pagination-bullet {
+  width: 24px !important;
+  height: 1px !important;
+  border-radius: 0 !important;
+  background: rgba(0, 0, 0, 0.18) !important;
+  opacity: 1 !important;
+  transition: background 0.3s ease !important;
 }
 
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
+.velora-swiper .swiper-pagination-bullet-active {
+  background: #000 !important;
+}
+
+.velora-swiper.on-dark .swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+.velora-swiper.on-dark .swiper-pagination-bullet-active {
+  background: #fff !important;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html.velora *,
+  html.velora *::before,
+  html.velora *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

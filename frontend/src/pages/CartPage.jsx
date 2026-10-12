@@ -1,210 +1,237 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaTrash, FaArrowLeft, FaShoppingBag, FaHeart } from 'react-icons/fa';
+import { X, Minus, Plus, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import { gsap, reveal, getImageUrl, formatPrice } from '../lib/motion';
+import {
+  Container,
+  PageHeader,
+  Eyebrow,
+  Button,
+  ButtonLink,
+  EmptyState,
+} from '../components/ui/Primitives';
+
+const FREE_SHIPPING_THRESHOLD = 5000;
+const SHIPPING_FEE = 500;
+
+const priceOf = (value) =>
+  typeof value === 'string' ? Number(value.replace(/[^0-9.]/g, '')) : Number(value ?? 0);
 
 const CartPage = () => {
   const { cart, removeFromCart, updateCartQuantity, getCartCount, user } = useAuth();
   const navigate = useNavigate();
-  const [checkoutLoading] = React.useState(false);
-  const [checkoutError, setCheckoutError] = React.useState('');
+  const [error, setError] = useState('');
+  const rootRef = useRef(null);
 
-  const calculateSubtotal = () => {
-    return cart.reduce((total, item) => {
-      const price = typeof item.price === 'string' ? parseFloat(item.price.replace(/[^0-9.]/g, '')) : item.price;
-      return total + (price * item.quantity);
-    }, 0);
-  };
+  const subtotal = cart.reduce((total, item) => total + priceOf(item.price) * item.quantity, 0);
+  const shipping = subtotal > FREE_SHIPPING_THRESHOLD || subtotal === 0 ? 0 : SHIPPING_FEE;
+  const total = subtotal + shipping;
+  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
-  const calculateShipping = () => {
-    const subtotal = calculateSubtotal();
-    return subtotal > 5000 ? 0 : 500; // Free shipping over Rs 5000
-  };
-
-  const calculateTotal = () => {
-    return calculateSubtotal() + calculateShipping();
-  };
-
-  const handleQuantityChange = (productId, newQuantity) => {
-    if (newQuantity >= 1) {
-      updateCartQuantity(productId, newQuantity);
-    }
-  };
-
-  const handleRemoveItem = (productId) => {
-    removeFromCart(productId);
-  };
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      reveal('.cart-row', { stagger: 0.07, y: 40, start: 'top 95%', trigger: rootRef.current });
+    }, rootRef);
+    return () => ctx.revert();
+  }, [cart.length]);
 
   const handleCheckout = () => {
     if (!user) {
-      setCheckoutError('You must be logged in to checkout.');
+      setError('Please sign in to complete your order.');
       return;
     }
-    navigate('/payment', { state: { cart, total: calculateTotal(), user } });
-  };
-
-  // Helper to get correct image URL
-  const getImageUrl = (img) => {
-    if (!img) return '';
-    if (img.startsWith('http')) return img;
-    if (img.startsWith('/uploads/products/')) return `${window.API_BASE_URL}${img}`;
-    return `${window.API_BASE_URL}/uploads/products/${img}`;
+    navigate('/payment', { state: { cart, total, user } });
   };
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="pt-32 pb-16">
-          <div className="max-w-4xl mx-auto px-4">
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FaShoppingBag className="text-gray-400 text-3xl" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-4">Your Cart is Empty</h1>
-              <p className="text-gray-600 mb-8">Looks like you haven't added any items to your cart yet.</p>
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 bg-red-500 text-white px-8 py-3 rounded-lg hover:bg-red-600 transition-colors"
-              >
-                <FaArrowLeft />
-                Continue Shopping
-              </Link>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
+      <>
+        <PageHeader eyebrow="Your Bag" title="Shopping Bag" meta="Empty" />
+        <Container>
+          <EmptyState
+            eyebrow="Nothing yet"
+            title="Your bag is empty"
+            body="Everything you add will wait here until you're ready."
+            action={<ButtonLink to="/latest">Start Shopping</ButtonLink>}
+          />
+        </Container>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="pt-32 pb-16">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Shopping Cart</h1>
-            <p className="text-gray-600">{getCartCount()} items in your cart</p>
-          </div>
+    <div ref={rootRef}>
+      <PageHeader
+        eyebrow="Your Bag"
+        title="Shopping Bag"
+        meta={`${getCartCount()} ${getCartCount() === 1 ? 'piece' : 'pieces'}`}
+      />
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Cart Items */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-sm">
-                {cart.map((item) => (
-                  <div key={item.id} className="flex items-center p-6 border-b border-gray-100 last:border-b-0">
-                    {/* Product Image */}
-                    <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={getImageUrl(item.image)}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+      <Container className="pb-24 md:pb-36">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+          {/* Line items */}
+          <div className="lg:col-span-8">
+            <div className="border-t border-line">
+              {cart.map((item) => {
+                const unit = priceOf(item.price);
+                const size = item.selectedSize || item.sizes?.[0];
+                const colour = item.selectedColor || item.color;
 
-                    {/* Product Details */}
-                    <div className="flex-1 ml-6">
-                      <h3 className="font-semibold text-gray-800 mb-1">{item.title}</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Color: {item.color} | Size: {item.sizes?.[0] || 'One Size'}
-                      </p>
-                      <p className="text-lg font-bold text-gray-800">
-                        Rs {typeof item.price === 'string' ? item.price.replace(/[^0-9.]/g, '') : item.price}
-                      </p>
-                    </div>
-
-                    {/* Quantity Controls */}
-                    <div className="flex items-center gap-3 mr-6">
-                      <button
-                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                      >
-                        -
-                      </button>
-                      <span className="w-12 text-center font-medium">{item.quantity}</span>
-                      <button
-                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    {/* Remove Button */}
-                    <button
-                      onClick={() => handleRemoveItem(item.id)}
-                      className="text-red-500 hover:text-red-600 transition-colors"
+                return (
+                  <div
+                    key={item.id}
+                    className="cart-row flex gap-4 sm:gap-6 py-6 border-b border-line"
+                  >
+                    <Link
+                      to={`/product/${item.id}`}
+                      className="relative w-20 sm:w-24 shrink-0 aspect-[4/5] overflow-hidden bg-muted"
                     >
-                      <FaTrash />
-                    </button>
+                      {getImageUrl(item.image) ? (
+                        <img
+                          src={getImageUrl(item.image)}
+                          alt={item.title || item.name}
+                          className="absolute inset-0 w-full h-full object-cover object-top"
+                        />
+                      ) : (
+                        <span className="absolute inset-0 flex items-center justify-center font-playfair text-xl text-black/15">
+                          {(item.title || item.name || '?').charAt(0)}
+                        </span>
+                      )}
+                    </Link>
+
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-medium leading-tight mb-1.5 truncate">
+                            <Link to={`/product/${item.id}`} className="hover:opacity-60 transition-opacity duration-300">
+                              {item.title || item.name}
+                            </Link>
+                          </h3>
+                          <p className="text-[10px] tracking-label uppercase text-black/35">
+                            {[colour, size].filter(Boolean).join(' · ') || 'One size'}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.id)}
+                          aria-label="Remove from bag"
+                          className="shrink-0 text-black/30 hover:text-black transition-colors duration-300"
+                        >
+                          <X size={16} strokeWidth={1.5} />
+                        </button>
+                      </div>
+
+                      <div className="mt-auto pt-4 flex items-end justify-between gap-4">
+                        <div className="inline-flex items-center border border-line">
+                          <button
+                            type="button"
+                            onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
+                            aria-label="Decrease quantity"
+                            className="w-9 h-9 flex items-center justify-center text-black/50 hover:text-black hover:bg-muted transition-colors duration-300"
+                          >
+                            <Minus size={12} strokeWidth={1.5} />
+                          </button>
+                          <span className="w-10 text-center text-[13px] tabular-nums">{item.quantity}</span>
+                          <button
+                            type="button"
+                            onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
+                            aria-label="Increase quantity"
+                            className="w-9 h-9 flex items-center justify-center text-black/50 hover:text-black hover:bg-muted transition-colors duration-300"
+                          >
+                            <Plus size={12} strokeWidth={1.5} />
+                          </button>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-sm tabular-nums">{formatPrice(unit * item.quantity)}</p>
+                          {item.quantity > 1 && (
+                            <p className="text-[11px] text-black/30 tabular-nums mt-0.5">
+                              {formatPrice(unit)} each
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
 
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl shadow-sm p-6 sticky top-32">
-                <h2 className="text-xl font-bold text-gray-800 mb-6">Order Summary</h2>
-                
-                <div className="space-y-4 mb-6">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">Rs {calculateSubtotal().toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping</span>
-                    <span className="font-medium">
-                      {calculateShipping() === 0 ? 'Free' : `Rs ${calculateShipping().toFixed(2)}`}
-                    </span>
-                  </div>
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between">
-                      <span className="text-lg font-bold text-gray-800">Total</span>
-                      <span className="text-lg font-bold text-gray-800">
-                        Rs {calculateTotal().toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
+            <Link
+              to="/latest"
+              className="inline-flex items-center gap-2.5 mt-8 text-[10px] tracking-label uppercase text-black/40 hover:text-black transition-colors duration-300"
+            >
+              <ArrowLeft size={13} strokeWidth={1.5} />
+              Continue shopping
+            </Link>
+          </div>
+
+          {/* Summary */}
+          <div className="lg:col-span-4">
+            <div className="cart-row lg:sticky lg:top-28 border border-line p-6 md:p-7">
+              <div className="mb-6">
+                <Eyebrow>Order Summary</Eyebrow>
+              </div>
+
+              <div className="flex flex-col gap-3 text-[13px] pb-5 border-b border-line">
+                <div className="flex justify-between">
+                  <span className="text-black/50">Subtotal</span>
+                  <span className="tabular-nums">{formatPrice(subtotal)}</span>
                 </div>
-
-                {/* Checkout Button */}
-                <button className="w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors mb-4"
-                  onClick={handleCheckout}
-                  disabled={checkoutLoading}
-                >
-                  {checkoutLoading ? 'Processing...' : 'Proceed to Checkout'}
-                </button>
-                {checkoutError && <div className="text-red-500 text-sm mt-2">{checkoutError}</div>}
-
-                {/* Continue Shopping */}
-                <Link
-                  to="/"
-                  className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FaArrowLeft />
-                  Continue Shopping
-                </Link>
-
-                {/* Shipping Info */}
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-2">Shipping Information</h3>
-                  <p className="text-sm text-gray-600">
-                    Free shipping on orders over Rs 5,000. Standard delivery takes 3-5 business days.
-                  </p>
+                <div className="flex justify-between">
+                  <span className="text-black/50">Delivery</span>
+                  <span className="tabular-nums">
+                    {shipping === 0 ? 'Free' : formatPrice(shipping)}
+                  </span>
                 </div>
               </div>
+
+              <div className="flex justify-between items-baseline py-5">
+                <span className="text-[10px] tracking-label uppercase">Total</span>
+                <span className="font-playfair text-2xl font-light tabular-nums">
+                  {formatPrice(total)}
+                </span>
+              </div>
+
+              {remaining > 0 && (
+                <div className="mb-6">
+                  <div className="h-px w-full bg-line mb-3">
+                    <div
+                      className="h-full bg-black transition-all duration-700"
+                      style={{ width: `${Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-black/40">
+                    Add {formatPrice(remaining)} for free delivery.
+                  </p>
+                </div>
+              )}
+
+              <Button onClick={handleCheckout} className="w-full !px-4 h-14">
+                Proceed to Checkout
+              </Button>
+
+              {error && (
+                <p className="mt-4 text-[11px] tracking-label uppercase text-destructive">
+                  {error}{' '}
+                  <Link to="/login" className="underline underline-offset-4">
+                    Sign in
+                  </Link>
+                </p>
+              )}
+
+              <p className="mt-6 text-[11px] leading-relaxed text-black/35">
+                Free delivery above {formatPrice(FREE_SHIPPING_THRESHOLD)}. Standard delivery
+                takes 3–5 business days from our Colombo studio.
+              </p>
             </div>
           </div>
         </div>
-      </div>
-      <Footer />
+      </Container>
     </div>
   );
 };
 
-export default CartPage; 
+export default CartPage;

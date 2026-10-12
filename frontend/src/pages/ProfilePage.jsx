@@ -1,288 +1,183 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import axios from 'axios';
+import { gsap, reveal } from '../lib/motion';
+import {
+  Container,
+  PageHeader,
+  Eyebrow,
+  Button,
+  ButtonLink,
+  Field,
+  EmptyState,
+} from '../components/ui/Primitives';
+
+const FIELDS = [
+  ['name', 'Full Name', 'text', true],
+  ['email', 'Email', 'email', true],
+  ['phone', 'Phone', 'tel', false],
+  ['address', 'Address', 'text', false],
+  ['city', 'City', 'text', false],
+  ['postalCode', 'Postal Code', 'text', false],
+];
+
+const emptyForm = (user) => ({
+  name: user?.name || '',
+  email: user?.email || '',
+  phone: user?.phone || '',
+  address: user?.address || '',
+  city: user?.city || '',
+  postalCode: user?.postalCode || '',
+});
 
 const ProfilePage = () => {
   const { user, login } = useAuth();
   const { showToast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    address: user?.address || '',
-    city: user?.city || '',
-    postalCode: user?.postalCode || ''
-  });
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState(() => emptyForm(user));
+  const rootRef = useRef(null);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSave = async () => {
-    try {
-      const res = await axios.patch(`${window.API_BASE_URL}/users/${user.id}`, formData);
-      login(res.data); // update user context and localStorage
-      setIsEditing(false);
-      showToast('Profile updated successfully!', 'success');
-    } catch {
-      showToast('Failed to update profile.', 'error');
-    }
-  };
-
-  const handleCancel = () => {
-    setFormData({
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      address: user?.address || '',
-      city: user?.city || '',
-      postalCode: user?.postalCode || ''
-    });
-    setIsEditing(false);
-  };
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      reveal('.profile-item', { stagger: 0.07, y: 40, start: 'top 95%', trigger: rootRef.current });
+    }, rootRef);
+    return () => ctx.revert();
+  }, [user]);
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="pt-32 pb-16">
-          <div className="max-w-4xl mx-auto px-4 text-center">
-            <h1 className="text-2xl font-bold text-gray-800 mb-4">Please log in to view your profile</h1>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors"
-            >
-              Go to Login
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
+      <>
+        <PageHeader eyebrow="Account" title="Profile" />
+        <Container>
+          <EmptyState
+            eyebrow="Sign in required"
+            title="Your details live behind the door"
+            body="Sign in to view and edit your delivery details."
+            action={<ButtonLink to="/login">Sign In</ButtonLink>}
+          />
+        </Container>
+      </>
     );
   }
 
+  const handleChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await axios.patch(`${window.API_BASE_URL}/users/${user.id}`, form);
+      login(res.data);
+      setEditing(false);
+      showToast('Profile updated', 'success');
+    } catch {
+      showToast('Could not save your profile', 'error');
+    }
+    setSaving(false);
+  };
+
+  const handleCancel = () => {
+    setForm(emptyForm(user));
+    setEditing(false);
+  };
+
+  const initials = (user.name || user.email || '?').trim().charAt(0).toUpperCase();
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="pt-32 pb-16">
-        <div className="max-w-4xl mx-auto px-4">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">My Profile</h1>
-            <p className="text-gray-600">Manage your account information and preferences</p>
-          </div>
+    <div ref={rootRef}>
+      <PageHeader eyebrow="Account" title="Profile" meta={user.email}>
+        {!editing && (
+          <Button variant="outline" onClick={() => setEditing(true)}>
+            Edit Details
+          </Button>
+        )}
+      </PageHeader>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Profile Card */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-800">Personal Information</h2>
-                  {!isEditing ? (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors"
-                    >
-                      <FaEdit />
-                      Edit
-                    </button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSave}
-                        className="flex items-center gap-2 text-green-500 hover:text-green-600 transition-colors"
-                      >
-                        <FaSave />
-                        Save
-                      </button>
-                      <button
-                        onClick={handleCancel}
-                        className="flex items-center gap-2 text-gray-500 hover:text-gray-600 transition-colors"
-                      >
-                        <FaTimes />
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </div>
+      <Container className="pb-24 md:pb-36">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+          {/* Identity card */}
+          <aside className="lg:col-span-4">
+            <div className="profile-item border border-line p-7">
+              <div className="w-16 h-16 bg-void text-white flex items-center justify-center font-playfair text-2xl font-light mb-6">
+                {initials}
+              </div>
+              <p className="font-playfair text-2xl font-light leading-tight mb-1.5">{user.name}</p>
+              <p className="text-[11px] text-black/40 mb-6 break-all">{user.email}</p>
+              {user.role && (
+                <span className="inline-block text-[9px] tracking-label uppercase border border-line px-2.5 py-1 text-black/50">
+                  {user.role}
+                </span>
+              )}
 
-                <div className="space-y-6">
-                  {/* Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FaUser className="inline mr-2" />
-                      Full Name
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-800">{formData.name}</p>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FaEnvelope className="inline mr-2" />
-                      Email Address
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-800">{formData.email}</p>
-                    )}
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FaPhone className="inline mr-2" />
-                      Phone Number
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-800">{formData.phone || 'Not provided'}</p>
-                    )}
-                  </div>
-
-                  {/* Address */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FaMapMarkerAlt className="inline mr-2" />
-                      Address
-                    </label>
-                    {isEditing ? (
-                      <textarea
-                        name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        rows={3}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-800">{formData.address || 'Not provided'}</p>
-                    )}
-                  </div>
-
-                  {/* City and Postal Code */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="city"
-                          value={formData.city}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                        />
-                      ) : (
-                        <p className="text-gray-800">{formData.city || 'Not provided'}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code</label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="postalCode"
-                          value={formData.postalCode}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                        />
-                      ) : (
-                        <p className="text-gray-800">{formData.postalCode || 'Not provided'}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+              <div className="mt-8 pt-6 border-t border-line flex flex-col gap-3">
+                {[
+                  ['My Orders', '/orders'],
+                  ['Wishlist', '/wishlist'],
+                  ['Shopping Bag', '/cart'],
+                ].map(([label, to]) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    className="text-[11px] tracking-label uppercase text-black/50 hover:text-black transition-colors duration-300 w-fit pb-0.5 border-b border-transparent hover:border-black"
+                  >
+                    {label}
+                  </Link>
+                ))}
               </div>
             </div>
+          </aside>
 
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              {/* Account Info */}
-              <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Account Information</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Member Since</span>
-                    <span className="font-medium">January 2024</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Account Type</span>
-                    <span className="font-medium capitalize">{user.role}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Status</span>
-                    <span className="text-green-600 font-medium">Active</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
-                <div className="space-y-3">
-                  <Link
-                    to="/orders"
-                    className="block w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="font-medium text-gray-800">My Orders</div>
-                    <div className="text-sm text-gray-600">View order history</div>
-                  </Link>
-                  <Link
-                    to="/wishlist"
-                    className="block w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="font-medium text-gray-800">My Wishlist</div>
-                    <div className="text-sm text-gray-600">Saved items</div>
-                  </Link>
-                  <Link
-                    to="/cart"
-                    className="block w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="font-medium text-gray-800">Shopping Cart</div>
-                    <div className="text-sm text-gray-600">View cart items</div>
-                  </Link>
-                </div>
-              </div>
+          {/* Details */}
+          <div className="lg:col-span-8">
+            <div className="profile-item mb-8">
+              <Eyebrow>Delivery Details</Eyebrow>
             </div>
+
+            <form onSubmit={handleSave}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-7">
+                {FIELDS.map(([name, label, type, required]) => (
+                  <div key={name} className="profile-item">
+                    {editing ? (
+                      <Field
+                        label={label}
+                        name={name}
+                        type={type}
+                        required={required}
+                        value={form[name]}
+                        onChange={handleChange}
+                        placeholder={`Your ${label.toLowerCase()}`}
+                      />
+                    ) : (
+                      <div className="border-b border-line pb-4">
+                        <p className="text-[10px] tracking-label uppercase text-black/40 mb-2">{label}</p>
+                        <p className="text-sm">
+                          {form[name] || <span className="text-black/25">Not set</span>}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {editing && (
+                <div className="profile-item flex flex-wrap gap-3 mt-10">
+                  <Button type="submit" disabled={saving}>
+                    {saving ? 'Saving…' : 'Save Changes'}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={handleCancel} disabled={saving}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
+            </form>
           </div>
         </div>
-      </div>
-      <Footer />
+      </Container>
     </div>
   );
 };
 
-export default ProfilePage; 
+export default ProfilePage;

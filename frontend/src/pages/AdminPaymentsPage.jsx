@@ -1,22 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import AdminNavbar from '../components/AdminNavbar';
+import { Trash2, RotateCw } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { formatPrice } from '../lib/format';
+import {
+  Card,
+  PageHeading,
+  Table,
+  Row,
+  Cell,
+  Status,
+  Loading,
+  Button,
+  Input,
+  ConfirmDialog,
+} from '../components/admin/AdminUI';
 
 const AdminPaymentsPage = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const { showToast } = useToast();
-
-  useEffect(() => {
-    fetchPayments();
-  }, []);
 
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(window.API_BASE_URL + '/api/payments');
+      const res = await axios.get('/api/payments');
       setPayments(Array.isArray(res.data) ? res.data : []);
     } catch {
       setPayments([]);
@@ -24,96 +35,134 @@ const AdminPaymentsPage = () => {
     setLoading(false);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this payment?')) return;
+  useEffect(() => {
+    fetchPayments();
+  }, []);
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const { id } = pendingDelete;
+    setDeleting(true);
     try {
-      await axios.delete(`${window.API_BASE_URL}/api/payments/${id}`);
-      setPayments(payments.filter(payment => payment.id !== id));
+      await axios.delete(`/api/payments/${id}`);
+      setPayments((prev) => prev.filter((p) => p.id !== id));
+      setPendingDelete(null);
+      showToast('Payment deleted', 'success');
     } catch {
-      showToast('Failed to delete payment.', 'error');
+      showToast('Could not delete that payment', 'error');
     }
+    setDeleting(false);
   };
 
-  const filteredPayments = payments.filter(payment => {
-    const q = search.toLowerCase();
-    return (
-      payment.recipientName?.toLowerCase().includes(q) ||
-      payment.paymentMethod?.toLowerCase().includes(q) ||
-      payment.paymentStatus?.toLowerCase().includes(q) ||
-      (payment.transactionId && payment.transactionId.toLowerCase().includes(q)) ||
-      (payment.orderId && payment.orderId.toString().includes(q))
-    );
-  });
+  const q = search.trim().toLowerCase();
+  const visible = q
+    ? payments.filter((p) =>
+        [p.recipientName, p.paymentMethod, p.paymentStatus, p.transactionId, p.orderId, p.id]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(q)
+      )
+    : payments;
+
+  const collected = visible
+    .filter((p) => String(p.paymentStatus || '').toLowerCase() === 'success')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminNavbar />
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold mb-8 text-blue-700">Manage Payments</h1>
-        <div className="mb-6 flex justify-between items-center">
-          <input
-            type="text"
-            placeholder="Search by recipient, method, status, transaction, order id..."
-            className="border px-4 py-2 rounded-lg w-80"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <button
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-600"
-            onClick={fetchPayments}
-          >
-            Refresh
-          </button>
-        </div>
-        {loading ? (
-          <div>Loading payments...</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-xl shadow-lg">
-              <thead>
-                <tr className="bg-blue-100 text-blue-700">
-                  <th className="p-4 text-left">Payment ID</th>
-                  <th className="p-4 text-left">Recipient</th>
-                  <th className="p-4 text-left">Method</th>
-                  <th className="p-4 text-left">Status</th>
-                  <th className="p-4 text-left">Amount</th>
-                  <th className="p-4 text-left">Order ID</th>
-                  <th className="p-4 text-left">Transaction ID</th>
-                  <th className="p-4 text-left">Date</th>
-                  <th className="p-4 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map(payment => (
-                  <tr key={payment.id} className="border-b">
-                    <td className="p-4">{payment.id}</td>
-                    <td className="p-4">{payment.recipientName}</td>
-                    <td className="p-4">{payment.paymentMethod}</td>
-                    <td className="p-4">{payment.paymentStatus}</td>
-                    <td className="p-4">Rs {payment.amount}</td>
-                    <td className="p-4">{payment.orderId}</td>
-                    <td className="p-4">{payment.transactionId}</td>
-                    <td className="p-4">{payment.paymentDate ? new Date(payment.paymentDate).toLocaleString() : ''}</td>
-                    <td className="p-4">
-                      <button
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold"
-                        onClick={() => handleDelete(payment.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredPayments.length === 0 && (
-                  <tr><td colSpan={8} className="text-center p-8 text-gray-500">No payments found.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+    <>
+      <PageHeading
+        eyebrow="Finance"
+        title="Payments"
+        meta={
+          loading
+            ? 'Loading'
+            : `${visible.length} of ${payments.length} · ${formatPrice(collected)} collected`
+        }
+      >
+        <Input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search recipient, method, transaction"
+          className="w-64"
+        />
+        <Button tone="outline" onClick={fetchPayments} disabled={loading}>
+          <RotateCw size={13} strokeWidth={1.6} />
+          Refresh
+        </Button>
+      </PageHeading>
+
+      {loading ? (
+        <Card><Loading label="Loading payments" /></Card>
+      ) : (
+        <Table
+          headers={['ID', 'Recipient', 'Method', 'Status', 'Amount', 'Order', 'Transaction', 'Date', '']}
+          empty={q ? `Nothing matches "${search}".` : 'No payments recorded yet.'}
+        >
+          {visible.map((payment) => (
+            <Row key={payment.id}>
+              <Cell className="tabular-nums text-black/40">{payment.id}</Cell>
+              <Cell className="text-black">{payment.recipientName || '—'}</Cell>
+              <Cell className="text-black/60">{payment.paymentMethod || '—'}</Cell>
+              <Cell><Status value={payment.paymentStatus} /></Cell>
+              <Cell className="tabular-nums">{formatPrice(payment.amount)}</Cell>
+              <Cell className="tabular-nums text-black/50">
+                {payment.orderId ? `#${payment.orderId}` : '—'}
+              </Cell>
+              <Cell>
+                <span
+                  className="block max-w-[12rem] truncate text-[11px] text-black/45"
+                  title={payment.transactionId || ''}
+                >
+                  {payment.transactionId || '—'}
+                </span>
+              </Cell>
+              <Cell className="text-black/50 whitespace-nowrap">
+                {payment.paymentDate
+                  ? new Date(payment.paymentDate).toLocaleDateString(undefined, {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })
+                  : '—'}
+              </Cell>
+              <Cell>
+                <div className="flex justify-end">
+                  <Button
+                    tone="danger"
+                    size="sm"
+                    onClick={() => setPendingDelete(payment)}
+                    aria-label={`Delete payment ${payment.id}`}
+                  >
+                    <Trash2 size={13} strokeWidth={1.6} />
+                  </Button>
+                </div>
+              </Cell>
+            </Row>
+          ))}
+        </Table>
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete payment"
+          confirmLabel="Delete payment"
+          busy={deleting}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={confirmDelete}
+          body={
+            <>
+              Payment <strong className="font-medium text-black">#{pendingDelete.id}</strong> of{' '}
+              <strong className="font-medium text-black">{formatPrice(pendingDelete.amount)}</strong>{' '}
+              will be permanently deleted. This only removes the record here — it does not refund
+              anything in Stripe.
+            </>
+          }
+        />
+      )}
+    </>
   );
 };
 
-export default AdminPaymentsPage; 
+export default AdminPaymentsPage;

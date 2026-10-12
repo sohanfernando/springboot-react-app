@@ -70,11 +70,13 @@ const ProfilePage = () => {
     setSaving(true);
     try {
       const res = await axios.patch(`${window.API_BASE_URL}/users/${user.id}`, form);
-      login(res.data);
+      // Merge rather than replace: the response has no token, and replacing
+      // the stored session would sign the user out.
+      login({ ...user, ...res.data });
       setEditing(false);
       showToast('Profile updated', 'success');
-    } catch {
-      showToast('Could not save your profile', 'error');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Could not save your profile', 'error');
     }
     setSaving(false);
   };

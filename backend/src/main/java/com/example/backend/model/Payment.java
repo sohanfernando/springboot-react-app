@@ -27,6 +27,9 @@ public class Payment {
 
     private Long orderId;
 
+    /** Who started this payment. Null on records created before ownership was tracked. */
+    private Long userId;
+
     private String stripePaymentIntentId;
 
     @Temporal(TemporalType.TIMESTAMP)

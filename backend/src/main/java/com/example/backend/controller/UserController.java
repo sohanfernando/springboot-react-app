@@ -2,54 +2,56 @@ package com.example.backend.controller;
 
 import com.example.backend.controller.dtos.request.LoginUserRequestDto;
 import com.example.backend.controller.dtos.request.UserCreateRequestDto;
-import com.example.backend.model.User;
-import com.example.backend.repository.UserRepository;
-import com.example.backend.service.impl.UserServiceImpl;
+import com.example.backend.controller.dtos.request.UserUpdateRequestDto;
+import com.example.backend.security.AuthUser;
+import com.example.backend.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @AllArgsConstructor
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private UserServiceImpl userServiceImpl;
-    private UserRepository userRepository;
+    private UserService userService;
 
-    @CrossOrigin(originPatterns = "*")
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody UserCreateRequestDto userCreateRequestDto) {
-        return ResponseEntity.ok(userServiceImpl.createUser(userCreateRequestDto));
+    public ResponseEntity<?> signup(@Valid @RequestBody UserCreateRequestDto request) {
+        return ResponseEntity.ok(userService.createUser(request));
     }
 
-    @CrossOrigin(originPatterns = "*")
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginUserRequestDto loginUserRequestDto) {
-        return ResponseEntity.ok(userServiceImpl.login(loginUserRequestDto));
+    public ResponseEntity<?> login(@Valid @RequestBody LoginUserRequestDto request, HttpServletRequest http) {
+        // getRemoteAddr, not X-Forwarded-For: that header is caller-supplied and
+        // would let an attacker pick a fresh "address" for every guess.
+        return ResponseEntity.ok(userService.login(request, http.getRemoteAddr()));
     }
 
-    @CrossOrigin(originPatterns = "*")
+    /** Admin only (enforced in SecurityConfig). */
+    @PostMapping("/admins")
+    public ResponseEntity<?> createAdmin(@Valid @RequestBody UserCreateRequestDto request) {
+        return ResponseEntity.ok(userService.createAdmin(request));
+    }
+
+    /** Admin only (enforced in SecurityConfig). */
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
-        return ResponseEntity.ok(userServiceImpl.getAllUsers());
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @CrossOrigin(originPatterns = "*")
     @PatchMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-        var userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> updateUser(@PathVariable Long id,
+                                        @Valid @RequestBody UserUpdateRequestDto update,
+                                        @AuthenticationPrincipal AuthUser caller) {
+        if (!caller.isAdmin() && !caller.id().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only edit your own profile.");
         }
-        var user = userOpt.get();
-        if (updatedUser.getName() != null) user.setName(updatedUser.getName());
-        if (updatedUser.getEmail() != null) user.setEmail(updatedUser.getEmail());
-        if (updatedUser.getPhone() != null) user.setPhone(updatedUser.getPhone());
-        if (updatedUser.getAddress() != null) user.setAddress(updatedUser.getAddress());
-        if (updatedUser.getCity() != null) user.setCity(updatedUser.getCity());
-        if (updatedUser.getPostalCode() != null) user.setPostalCode(updatedUser.getPostalCode());
-        userRepository.save(user);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(userService.updateProfile(id, update));
     }
 }

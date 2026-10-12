@@ -38,7 +38,6 @@ const SignUpPage = () => {
         name,
         email,
         password,
-        role: 'USER',
       });
 
       login(response.data);

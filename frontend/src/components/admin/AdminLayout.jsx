@@ -6,6 +6,7 @@ import {
   ClipboardList,
   CreditCard,
   Users,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -19,6 +20,7 @@ const NAV = [
   { to: '/admin/orders', label: 'Orders', icon: ClipboardList },
   { to: '/admin/payments', label: 'Payments', icon: CreditCard },
   { to: '/admin/users', label: 'Users', icon: Users },
+  { to: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 /**

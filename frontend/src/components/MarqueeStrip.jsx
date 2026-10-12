@@ -1,7 +1,7 @@
 import React from 'react';
+import { useStoreSettings, freeDeliveryText } from '../lib/storeSettings';
 
 const ITEMS = [
-  'Free shipping over Rs 5,000',
   'Small-batch production',
   'Colombo — since 2025',
   '30-day returns',
@@ -12,7 +12,13 @@ const ITEMS = [
  * break the two full-bleed blocks apart, so it stays thin and quiet.
  */
 const MarqueeStrip = () => {
-  const run = [...ITEMS, ...ITEMS, ...ITEMS, ...ITEMS];
+  const shipping = freeDeliveryText(useStoreSettings(), {
+    over: (amount) => `Free shipping over ${amount}`,
+    always: 'Free shipping on every order',
+    fallback: 'Island-wide shipping',
+  });
+  const items = [shipping, ...ITEMS];
+  const run = [...items, ...items, ...items, ...items];
 
   return (
     <div className="bg-void text-white overflow-hidden py-3.5 select-none">

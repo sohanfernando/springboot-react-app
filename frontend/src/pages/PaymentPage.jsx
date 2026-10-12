@@ -27,7 +27,10 @@ import {
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 
-const COD_LIMIT = 3000;
+// The server prices the bag itself, so it is only told which products and how many.
+const bagLines = (cart) => cart.map(({ id, quantity }) => ({ id, quantity }));
+
+const serverMessage = (err) => err.response?.data?.message || err.response?.data?.error;
 
 const cardElementOptions = {
   style: {
@@ -41,7 +44,7 @@ const cardElementOptions = {
   },
 };
 
-const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
+const PaymentForm = ({ cart, total, codAllowed, codLimit, user, setCart, navigate }) => {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -57,19 +60,13 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
   const createPaymentIntent = async () => {
     try {
       const response = await axios.post(`${window.API_BASE_URL}/api/payments/create-payment-intent`, {
-        amount: Math.round(total),
-        currency: 'lkr',
-        description: `Order payment for ${user?.name || 'Customer'}`,
-        receiptEmail: user?.email,
+        items: bagLines(cart),
       });
       setClientSecret(response.data.clientSecret);
     } catch (err) {
-      // The server passes Stripe's own message through as `error`; showing it
-      // beats a generic string when the cause is a key or currency problem.
-      setError(
-        err.response?.data?.error ||
-          'We could not start the payment. Please try again.'
-      );
+      // The server passes Stripe's own message through; showing it beats a
+      // generic string when the cause is a key or currency problem.
+      setError(serverMessage(err) || 'We could not start the payment. Please try again.');
       console.error('Payment intent creation error:', err);
     }
   };
@@ -81,7 +78,7 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
       setCity(user.city || '');
       setPostalCode(user.postalCode || '');
     }
-    if (total <= COD_LIMIT) {
+    if (codAllowed) {
       setPaymentMethod('Cash on Delivery');
     } else {
       setPaymentMethod('Stripe');
@@ -97,18 +94,13 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
     try {
       const paymentRes = await axios.post(`${window.API_BASE_URL}/api/payments`, {
         recipientName,
-        paymentMethod: 'Cash on Delivery',
-        amount: total,
-        address,
-        city,
-        postalCode,
+        items: bagLines(cart),
       });
       const payment = paymentRes.data;
 
+      // No total or user id: the server sets both, and links the payment.
       const orderRes = await axios.post(`${window.API_BASE_URL}/api/orders`, {
-        userId: user.id,
         items: JSON.stringify(cart),
-        total,
         recipientName,
         address,
         city,
@@ -116,14 +108,10 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
         paymentId: payment.id,
       });
 
-      await axios.patch(`${window.API_BASE_URL}/api/payments/${payment.id}/order`, orderRes.data.id, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-
       setCart([]);
       navigate('/order-confirmation', { state: { order: orderRes.data } });
     } catch (e2) {
-      setError('The order could not be placed. Please try again.');
+      setError(serverMessage(e2) || 'The order could not be placed. Please try again.');
       console.error('Payment error:', e2);
     }
     setLoading(false);
@@ -159,26 +147,16 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
         const paymentRes = await axios.post(`${window.API_BASE_URL}/api/payments/stripe-payment`, {
           paymentIntentId: paymentIntent.id,
           recipientName,
-          amount: total,
-          address,
-          city,
-          postalCode,
         });
         const payment = paymentRes.data;
 
         const orderRes = await axios.post(`${window.API_BASE_URL}/api/orders`, {
-          userId: user.id,
           items: JSON.stringify(cart),
-          total,
           recipientName,
           address,
           city,
           postalCode,
           paymentId: payment.id,
-        });
-
-        await axios.patch(`${window.API_BASE_URL}/api/payments/${payment.id}/order`, orderRes.data.id, {
-          headers: { 'Content-Type': 'application/json' },
         });
 
         setCart([]);
@@ -188,7 +166,7 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
       }
     } catch (err) {
       setError(
-        err.response?.data?.error ||
+        serverMessage(err) ||
           err?.message ||
           'Something went wrong during payment. Please try again.'
       );
@@ -258,17 +236,19 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
             if (e.target.value === 'Stripe' && !clientSecret) createPaymentIntent();
           }}
           required
-          disabled={total > COD_LIMIT}
+          disabled={!codAllowed}
           className="w-full h-12 px-4 bg-white border border-line text-sm text-black focus:outline-none focus:border-black transition-colors duration-300 disabled:text-black/50"
         >
-          {total <= COD_LIMIT && <option value="Cash on Delivery">Cash on Delivery</option>}
+          {codAllowed && <option value="Cash on Delivery">Cash on Delivery</option>}
           <option value="Stripe">Card — Visa, Mastercard</option>
         </select>
       </Field>
 
-      {total > COD_LIMIT && (
+      {!codAllowed && (
         <p className="mt-3 text-[11px] text-black/40">
-          Orders above {formatPrice(COD_LIMIT)} are card only.
+          {Number(codLimit) > 0
+            ? `Orders above ${formatPrice(codLimit)} are card only.`
+            : 'Card payment only.'}
         </p>
       )}
 
@@ -303,8 +283,31 @@ const PaymentForm = ({ cart, total, user, setCart, navigate }) => {
 const PaymentPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { cart, total, user } = location.state || {};
+  const { cart, user } = location.state || {};
   const { setCart } = useAuth();
+
+  // The total shown and charged comes from the server, priced from the
+  // catalogue at this moment. The figure the bag page calculated is not used.
+  const [quote, setQuote] = useState(null);
+  const [quoteError, setQuoteError] = useState('');
+
+  useEffect(() => {
+    if (!cart || !user) return undefined;
+    let cancelled = false;
+    axios
+      .post(`${window.API_BASE_URL}/api/orders/quote`, { items: bagLines(cart) })
+      .then((res) => {
+        if (!cancelled) setQuote(res.data);
+      })
+      .catch((err) => {
+        if (!cancelled) setQuoteError(serverMessage(err) || 'We could not price your bag. Please try again.');
+      });
+    return () => {
+      cancelled = true;
+    };
+    // The bag is fixed for the life of this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!cart || !user) {
     return (
@@ -321,6 +324,30 @@ const PaymentPage = () => {
       </>
     );
   }
+
+  if (quoteError || !quote) {
+    return (
+      <>
+        <PageHeader eyebrow="Checkout" title="Payment" />
+        <Container>
+          {quoteError ? (
+            <EmptyState
+              eyebrow="Checkout unavailable"
+              title="We could not price your bag"
+              body={quoteError}
+              action={<ButtonLink to="/cart">Go to Bag</ButtonLink>}
+            />
+          ) : (
+            <p className="py-24 text-center text-[11px] tracking-label uppercase text-black/40">
+              Preparing your checkout…
+            </p>
+          )}
+        </Container>
+      </>
+    );
+  }
+
+  const total = Number(quote.total);
 
   return (
     <>
@@ -346,6 +373,8 @@ const PaymentPage = () => {
               <PaymentForm
                 cart={cart}
                 total={total}
+                codAllowed={quote.codAllowed}
+                codLimit={quote.codLimit}
                 user={user}
                 setCart={setCart}
                 navigate={navigate}

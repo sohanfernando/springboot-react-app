@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
@@ -15,8 +15,17 @@ export default function AdminSignupPage() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { loginAdmin } = useAuth();
+  const { admin } = useAuth();
   const { showToast } = useToast();
+  const isAdmin = admin?.role === 'ADMIN';
+
+  // Only a signed-in administrator can create another one; the server
+  // enforces this too, so this guard is just to avoid showing a dead form.
+  useEffect(() => {
+    if (!isAdmin) navigate('/admin-login', { replace: true });
+  }, [isAdmin, navigate]);
+
+  if (!isAdmin) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,19 +33,9 @@ export default function AdminSignupPage() {
     setError('');
 
     try {
-      const response = await axios.post('/users/signup', {
-        name,
-        email,
-        password,
-        role: 'ADMIN',
-      });
-
-      // Must be loginAdmin, not login: the admin guard reads the `admin`
-      // session. Storing this as a customer session created the account but
-      // then bounced straight back to the login screen.
-      loginAdmin(response.data);
+      await axios.post('/users/admins', { name, email, password });
       showToast('Administrator account created', 'success');
-      navigate('/admin');
+      navigate('/admin/users');
     } catch (err) {
       setError(err.response?.data?.message || 'We could not create that account. Please try again.');
     } finally {
@@ -121,9 +120,8 @@ export default function AdminSignupPage() {
           </form>
 
           <p className="mt-7 pt-5 border-t border-line text-[11px] tracking-label uppercase text-black/40">
-            Already registered?{' '}
-            <Link to="/admin-login" className="text-black border-b border-black pb-0.5">
-              Sign in
+            <Link to="/admin/users" className="text-black border-b border-black pb-0.5">
+              Back to users
             </Link>
           </p>
         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import { Card, PageHeading, Table, Row, Cell, Loading, Input } from '../components/admin/AdminUI';
 
 const AdminUsersPage = () => {
@@ -44,6 +45,12 @@ const AdminUsersPage = () => {
           placeholder="Search name, email, role"
           className="w-64"
         />
+        <Link
+          to="/admin-signup"
+          className="text-[11px] tracking-label uppercase text-black border-b border-black pb-0.5 whitespace-nowrap"
+        >
+          Add administrator
+        </Link>
       </PageHeading>
 
       {loading ? (

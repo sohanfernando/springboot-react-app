@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { Gem, Recycle, Truck, RotateCcw } from 'lucide-react';
 import { gsap, reveal, drawLine } from '../lib/motion';
 import { SectionHeader } from './ui/Primitives';
+import { useStoreSettings, freeDeliveryText } from '../lib/storeSettings';
 
 const VALUES = [
   {
@@ -17,7 +18,8 @@ const VALUES = [
   {
     icon: Truck,
     title: 'Island-wide Delivery',
-    body: 'Free above Rs 5,000, tracked from our Colombo studio to your door in 3–5 days.',
+    delivery: true,
+    body: 'tracked from our Colombo studio to your door in 3–5 days.',
   },
   {
     icon: RotateCcw,
@@ -28,6 +30,11 @@ const VALUES = [
 
 const ValuesSection = () => {
   const rootRef = useRef(null);
+  const deliveryLead = freeDeliveryText(useStoreSettings(), {
+    over: (amount) => `Free above ${amount}, `,
+    always: 'Free on every order, ',
+    fallback: 'Delivered island-wide, ',
+  });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -59,7 +66,9 @@ const ValuesSection = () => {
                 />
               </div>
               <h3 className="text-sm font-medium tracking-[0.06em] mb-3">{value.title}</h3>
-              <p className="text-[13px] leading-relaxed text-black/50 max-w-[38ch]">{value.body}</p>
+              <p className="text-[13px] leading-relaxed text-black/50 max-w-[38ch]">
+                {value.delivery ? deliveryLead + value.body : value.body}
+              </p>
             </div>
           ))}
         </div>

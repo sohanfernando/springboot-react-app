@@ -16,7 +16,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginAdmin } = useAuth();
   const { showToast } = useToast();
   const rootRef = useRef(null);
 
@@ -34,12 +34,13 @@ const LoginPage = () => {
 
     try {
       const response = await axios.post(`${window.API_BASE_URL}/users/login`, { email, password });
-      login(response.data);
-
       if (response.data.role === 'ADMIN') {
+        // Admin screens read the admin session, so store it there.
+        loginAdmin(response.data);
         showToast('Welcome back, admin', 'success');
         navigate('/admin');
       } else {
+        login(response.data);
         showToast('Welcome back', 'success');
         navigate('/');
       }

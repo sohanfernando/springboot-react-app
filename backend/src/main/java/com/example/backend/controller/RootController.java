@@ -3,12 +3,10 @@ package com.example.backend.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(originPatterns = "*")
 public class RootController {
 
     @GetMapping("/")

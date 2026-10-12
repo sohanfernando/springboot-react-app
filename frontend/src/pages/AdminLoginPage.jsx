@@ -102,11 +102,8 @@ const AdminLoginPage = () => {
             </Button>
           </form>
 
-          <p className="mt-7 pt-5 border-t border-line text-[11px] tracking-label uppercase text-black/40">
-            Need an account?{' '}
-            <Link to="/admin-signup" className="text-black border-b border-black pb-0.5">
-              Register
-            </Link>
+          <p className="mt-7 pt-5 border-t border-line text-[12px] text-black/45">
+            New administrator accounts are created by an existing administrator.
           </p>
         </div>
 

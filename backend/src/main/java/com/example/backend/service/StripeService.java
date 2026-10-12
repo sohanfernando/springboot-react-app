@@ -55,7 +55,10 @@ public class StripeService {
         return parts[2].substring(0, Math.min(8, parts[2].length()));
     }
 
-    public PaymentIntent createPaymentIntent(Long amount, String currency, String description, String receiptEmail) throws StripeException {
+    public static final String METADATA_USER_ID = "userId";
+
+    public PaymentIntent createPaymentIntent(Long amount, String currency, String description, String receiptEmail,
+                                             Long userId) throws StripeException {
         // Convert amount to cents (Stripe uses smallest currency unit)
         long amountInCents = amount * 100;
 
@@ -63,6 +66,8 @@ public class StripeService {
                 .setAmount(amountInCents)
                 .setCurrency(currency)
                 .setDescription(description)
+                // Records who the intent was created for, so nobody else can claim it later.
+                .putMetadata(METADATA_USER_ID, String.valueOf(userId))
                 .setAutomaticPaymentMethods(
                         PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
                                 .setEnabled(true)

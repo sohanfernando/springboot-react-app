@@ -12,7 +12,6 @@ import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/uploads/products")
-@CrossOrigin(originPatterns = "*")
 public class FileController {
 
     @GetMapping("/{filename:.+}")

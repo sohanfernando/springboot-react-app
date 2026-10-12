@@ -28,6 +28,7 @@ import AdminCatalogPage from './pages/AdminCatalogPage'
 import AdminOrdersPage from './pages/AdminOrdersPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import AdminPaymentsPage from './pages/AdminPaymentsPage'
+import AdminSettingsPage from './pages/AdminSettingsPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminSignupPage from './pages/AdminSignupPage'
 
@@ -63,6 +64,7 @@ const App = () => {
           <Route path='/admin/orders' element={<AdminOrdersPage />} />
           <Route path='/admin/payments' element={<AdminPaymentsPage />} />
           <Route path='/admin/users' element={<AdminUsersPage />} />
+          <Route path='/admin/settings' element={<AdminSettingsPage />} />
         </Route>
 
         {/* Admin auth sits outside the guarded layout. */}

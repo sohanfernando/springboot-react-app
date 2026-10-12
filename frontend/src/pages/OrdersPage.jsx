@@ -47,10 +47,8 @@ const OrdersPage = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${window.API_BASE_URL}/api/orders`);
-        const mine = Array.isArray(res.data)
-          ? res.data.filter((order) => order.userId === user.id)
-          : [];
+        const res = await axios.get(`${window.API_BASE_URL}/api/orders/mine`);
+        const mine = Array.isArray(res.data) ? res.data : [];
         if (!cancelled) setOrders(mine);
       } catch {
         if (!cancelled) setOrders([]);

@@ -5,6 +5,7 @@ import { ArrowLeft, Heart, Minus, Plus, Truck, ShieldCheck, RotateCcw } from 'lu
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { gsap, reveal, getImageUrl, formatPrice } from '../lib/motion';
+import { useStoreSettings, freeDeliveryText } from '../lib/storeSettings';
 import ProductGrid from '../components/ProductGrid';
 import {
   Container,
@@ -17,7 +18,7 @@ import {
 } from '../components/ui/Primitives';
 
 const ASSURANCES = [
-  { icon: Truck, title: 'Free Delivery', body: 'On every order above Rs 5,000' },
+  { icon: Truck, title: 'Free Delivery', delivery: true },
   { icon: ShieldCheck, title: 'Secure Checkout', body: 'Card payments handled by Stripe' },
   { icon: RotateCcw, title: 'Thirty Days', body: 'Unworn returns, no questions asked' },
 ];
@@ -42,6 +43,11 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const { addToCart, toggleWishlist, isInWishlist } = useAuth();
   const { showToast } = useToast();
+  const freeDeliveryBody = freeDeliveryText(useStoreSettings(), {
+    over: (amount) => `On every order above ${amount}`,
+    always: 'On every order',
+    fallback: 'On qualifying orders',
+  });
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -411,7 +417,9 @@ const ProductDetailPage = () => {
                   <assurance.icon size={16} strokeWidth={1.4} className="mt-0.5 text-black/40 shrink-0" />
                   <div>
                     <p className="text-[11px] tracking-label uppercase mb-1">{assurance.title}</p>
-                    <p className="text-[12px] text-black/40">{assurance.body}</p>
+                    <p className="text-[12px] text-black/40">
+                      {assurance.delivery ? freeDeliveryBody : assurance.body}
+                    </p>
                   </div>
                 </div>
               ))}

@@ -71,7 +71,6 @@ This application uses **Stripe** for secure payment processing.
 1. Get your Stripe API keys from [Stripe Dashboard](https://dashboard.stripe.com)
 2. Configure backend: Update `backend/src/main/resources/application.properties` with your Stripe secret key
 3. Configure frontend: Update `frontend/src/pages/PaymentPage.jsx` with your Stripe publishable key
-4. See `STRIPE_SETUP.md` for detailed setup instructions
 
 ### Payment Flow
 - Orders over Rs 3000: Stripe card payment required
@@ -81,8 +80,7 @@ This application uses **Stripe** for secure payment processing.
 ## Notes
 - Product images are stored in `backend/uploads/products/`
 - Update CORS settings in backend if deploying to production
-- **Important:** Configure Stripe API keys before testing payments (see `STRIPE_SETUP.md`)
 
 ---
 
-**Developed as a coding challenge project.** 
+**Developed as a personal project.** 

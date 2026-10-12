@@ -1,4 +1,4 @@
-# Backend
+# FashionHub
 
 A full-stack e-commerce web application with a Spring Boot backend and React frontend.
 

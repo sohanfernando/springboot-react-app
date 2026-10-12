@@ -32,7 +32,7 @@ public class StripeService {
             log.error("""
                     STRIPE IS NOT CONFIGURED — card payments will fail.
                     app.stripe.secret-key resolved to a placeholder. Set STRIPE_SECRET_KEY in
-                    src/main/resources/.env or as an environment variable.""");
+                    backend/.env or as an environment variable.""");
             return;
         }
 

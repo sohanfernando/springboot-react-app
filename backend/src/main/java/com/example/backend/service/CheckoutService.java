@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -55,7 +56,7 @@ public class CheckoutService {
      * with each price replaced by the catalogue price.
      */
     public record Quote(BigDecimal subtotal, BigDecimal shipping, BigDecimal total, String itemsJson,
-                        StoreSettings settings) {
+                        StoreSettings settings, Map<Long, Integer> trackedQuantities) {
 
         public boolean codAllowed() {
             return total.compareTo(settings.getCodLimit()) <= 0;
@@ -104,6 +105,8 @@ public class CheckoutService {
 
         BigDecimal subtotal = BigDecimal.ZERO;
         ArrayNode priced = objectMapper.createArrayNode();
+        // Per product, not per line: the same product can appear on two lines.
+        Map<Long, Integer> trackedQuantities = new LinkedHashMap<>();
         for (JsonNode item : items) {
             Product product = products.get(productId(item));
             if (product == null || product.getPrice() == null || product.getPrice() <= 0) {
@@ -113,6 +116,11 @@ public class CheckoutService {
             int quantity = quantity(item);
             BigDecimal price = BigDecimal.valueOf(product.getPrice());
             subtotal = subtotal.add(price.multiply(BigDecimal.valueOf(quantity)));
+
+            if (product.getStock() != null) {
+                int wanted = trackedQuantities.merge(product.getId(), quantity, Integer::sum);
+                if (wanted > product.getStock()) throw notEnoughStock(product);
+            }
 
             ObjectNode line = item.isObject() ? ((ObjectNode) item).deepCopy() : objectMapper.createObjectNode();
             line.put("id", product.getId());
@@ -125,7 +133,15 @@ public class CheckoutService {
         StoreSettings settings = settingsService.get();
         BigDecimal shipping = subtotal.compareTo(settings.getFreeShippingThreshold()) > 0
                 ? BigDecimal.ZERO : settings.getShippingFee();
-        return new Quote(subtotal, shipping, subtotal.add(shipping), priced.toString(), settings);
+        return new Quote(subtotal, shipping, subtotal.add(shipping), priced.toString(), settings,
+                trackedQuantities);
+    }
+
+    private static ResponseStatusException notEnoughStock(Product product) {
+        String message = product.getStock() <= 0
+                ? product.getName() + " is sold out. Please remove it from your bag."
+                : "Only " + product.getStock() + " left of " + product.getName() + ". Please reduce the quantity.";
+        return new ResponseStatusException(HttpStatus.CONFLICT, message);
     }
 
     /**
@@ -156,6 +172,16 @@ public class CheckoutService {
         if (payment.getAmount() == null || BigDecimal.valueOf(payment.getAmount()).compareTo(expected) != 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Your bag changed after payment started. Please start checkout again.");
+        }
+
+        // The quote saw enough stock a moment ago; this is the check that
+        // counts, because it tests and takes the stock in one statement. If
+        // someone else got there first, the whole order rolls back.
+        for (Map.Entry<Long, Integer> line : quote.trackedQuantities().entrySet()) {
+            if (productRepository.takeStock(line.getKey(), line.getValue()) == 0) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Something in your bag just sold out. Please review your bag.");
+            }
         }
 
         Order order = new Order();

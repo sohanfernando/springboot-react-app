@@ -24,6 +24,7 @@ public class UserServiceImplTest {
     private UserRepository userRepository;
     private BCryptPasswordEncoder encoder;
     private JwtService jwtService;
+    private LoginAttemptService loginAttempts;
     private UserServiceImpl service;
 
     @BeforeEach
@@ -31,7 +32,8 @@ public class UserServiceImplTest {
         userRepository = Mockito.mock(UserRepository.class);
         encoder = new BCryptPasswordEncoder(4);
         jwtService = new JwtService("", 60);
-        service = new UserServiceImpl(userRepository, encoder, jwtService, new LoginAttemptService());
+        loginAttempts = Mockito.mock(LoginAttemptService.class);
+        service = new UserServiceImpl(userRepository, encoder, jwtService, loginAttempts);
         Mockito.when(userRepository.save(any(User.class))).thenAnswer(i -> {
             User saved = i.getArgument(0);
             if (saved.getId() == null) saved.setId(1L);
@@ -100,13 +102,25 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void repeatedFailuresLockTheAccountEvenForTheRightPassword() {
+    void everyFailedAttemptIsCountedAndASuccessClearsTheAccount() {
         storedUser("test@example.com", "password1");
 
-        for (int i = 0; i < 10; i++) {
-            assertThrows(ResponseStatusException.class,
-                    () -> service.login(loginRequest("test@example.com", "nope-nope"), ADDRESS));
-        }
+        assertThrows(ResponseStatusException.class,
+                () -> service.login(loginRequest("test@example.com", "nope-nope"), ADDRESS));
+        assertThrows(ResponseStatusException.class,
+                () -> service.login(loginRequest("nobody@example.com", "nope-nope"), ADDRESS));
+        Mockito.verify(loginAttempts).recordFailure("test@example.com", ADDRESS);
+        Mockito.verify(loginAttempts).recordFailure("nobody@example.com", ADDRESS);
+
+        service.login(loginRequest("test@example.com", "password1"), ADDRESS);
+        Mockito.verify(loginAttempts).recordSuccess("test@example.com");
+    }
+
+    // The counting itself is exercised against a real database in RateLimitIntegrationTest.
+    @Test
+    void aBlockedAccountIsRefusedEvenWithTheRightPassword() {
+        storedUser("test@example.com", "password1");
+        Mockito.when(loginAttempts.isBlocked("test@example.com", ADDRESS)).thenReturn(true);
 
         var e = assertThrows(ResponseStatusException.class,
                 () -> service.login(loginRequest("test@example.com", "password1"), ADDRESS));

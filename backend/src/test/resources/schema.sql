@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS products (
     name VARCHAR(255),
     description TEXT,
     price DOUBLE,
+    stock INT,
     category VARCHAR(255),
     subcategory VARCHAR(255),
     created_at DATETIME,

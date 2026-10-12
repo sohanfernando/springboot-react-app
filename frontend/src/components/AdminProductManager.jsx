@@ -27,6 +27,7 @@ const initialForm = {
   name: '',
   description: '',
   price: '',
+  stock: '',
   category: 'Men',
   subcategory: 'T-Shirts',
   colors: '',
@@ -216,6 +217,7 @@ function AdminProductManager() {
       name: product.name,
       description: product.description,
       price: product.price,
+      stock: product.stock ?? '',
       category: product.category,
       subcategory: product.subcategory,
       colors: Array.isArray(product.colors) ? product.colors.join(', ') : '',
@@ -280,6 +282,8 @@ function AdminProductManager() {
         name: form.name,
         description: form.description,
         price: form.price,
+        // Blank means "not tracked": the product never sells out.
+        stock: form.stock === '' ? null : Number(form.stock),
         category: form.category,
         subcategory: subcategoryValue,
         colors: colorsArr,
@@ -446,7 +450,14 @@ function AdminProductManager() {
                 <p className="text-[13px] font-medium leading-tight mb-1.5 line-clamp-2" title={p.name}>
                   {p.name}
                 </p>
-                <p className="text-[13px] tabular-nums mb-4">Rs {p.price}</p>
+                <p className="text-[13px] tabular-nums mb-1">Rs {p.price}</p>
+                <p
+                  className={`text-[10px] tracking-label uppercase mb-4 ${
+                    p.stock === 0 ? 'text-rose-600' : 'text-black/40'
+                  }`}
+                >
+                  {p.stock == null ? 'Stock not tracked' : p.stock === 0 ? 'Sold out' : `${p.stock} in stock`}
+                </p>
 
                 <div className="mt-auto flex gap-2">
                   <button
@@ -520,6 +531,13 @@ function AdminProductManager() {
                 <div className="mb-3">
                   <label className="block text-[10px] tracking-label uppercase text-black/45 mb-2">Price (Rs)</label>
                   <input type="number" name="price" value={form.price} onChange={handleFormChange} className="w-full h-10 border border-line px-3 text-[13px] focus:outline-none focus:border-black transition-colors duration-200" required min="0" />
+                </div>
+                <div className="mb-3">
+                  <label className="block text-[10px] tracking-label uppercase text-black/45 mb-2">Stock</label>
+                  <input type="number" name="stock" value={form.stock} onChange={handleFormChange} className="w-full h-10 border border-line px-3 text-[13px] focus:outline-none focus:border-black transition-colors duration-200" min="0" step="1" placeholder="Leave blank if you do not track stock" />
+                  <div className="text-xs text-gray-500 mt-1">
+                    Units available. Each order reduces it; at 0 the product shows as sold out.
+                  </div>
                 </div>
                 <div className="mb-3 grid grid-cols-2 gap-3">
                   <div>

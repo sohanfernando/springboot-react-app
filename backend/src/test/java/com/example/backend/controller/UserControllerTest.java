@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.controller.dtos.request.UserUpdateRequestDto;
 import com.example.backend.controller.dtos.response.GetUserResponseDto;
 import com.example.backend.security.AuthUser;
+import com.example.backend.security.RateLimiter;
 import com.example.backend.service.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private RateLimiter rateLimiter;
 
     private void signInAs(long id, String role) {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(

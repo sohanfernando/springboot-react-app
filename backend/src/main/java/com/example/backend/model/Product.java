@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,6 +25,10 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
     private Double price;
+
+    /** Units left to sell. Null means stock is not tracked and the product never sells out. */
+    private Integer stock;
+
     private String category; // Men, Women, Accessories
     private String subcategory; // e.g. T-Shirts, Dresses, Bags
 
@@ -61,4 +66,10 @@ public class Product {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    /** Derived from stock for the storefront; never stored and ignored if sent in. */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    public String getAvailability() {
+        return stock != null && stock <= 0 ? "out-of-stock" : "in-stock";
+    }
 }

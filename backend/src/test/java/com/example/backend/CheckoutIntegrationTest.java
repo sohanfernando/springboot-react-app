@@ -381,4 +381,82 @@ class CheckoutIntegrationTest {
 
         mockMvc.perform(get("/api/settings")).andExpect(jsonPath("$.shippingFee").value(500));
     }
+
+    private long productWithStock(String name, double price, int stock) {
+        Product product = new Product();
+        product.setName(name);
+        product.setPrice(price);
+        product.setStock(stock);
+        return productRepository.save(product).getId();
+    }
+
+    private Integer stockOf(long productId) {
+        return productRepository.findById(productId).orElseThrow().getStock();
+    }
+
+    @Test
+    void aBagCannotAskForMoreThanIsInStock() throws Exception {
+        Account customer = account();
+        long scarf = productWithStock("Scarf", 500.0, 2);
+
+        send(customer, "/api/orders/quote", "{\"items\":" + items(scarf, 3) + "}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Only 2 left of Scarf. Please reduce the quantity."));
+
+        // Two lines of the same product are added together.
+        send(customer, "/api/orders/quote",
+                "{\"items\":[{\"id\":" + scarf + ",\"quantity\":2},{\"id\":" + scarf + ",\"quantity\":1}]}")
+                .andExpect(status().isConflict());
+
+        send(customer, "/api/orders/quote", "{\"items\":" + items(scarf, 2) + "}").andExpect(status().isOk());
+        send(customer, "/api/payments", "{\"recipientName\":\"Test\",\"items\":" + items(scarf, 3) + "}")
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void placingAnOrderTakesStockAndTheLastUnitSellsOnce() throws Exception {
+        Account first = account();
+        Account second = account();
+        long scarf = productWithStock("Scarf", 500.0, 1);
+
+        // Both customers get as far as paying for the last one.
+        long firstPayment = cashPayment(first, items(scarf, 1));
+        long secondPayment = cashPayment(second, items(scarf, 1));
+
+        send(first, "/api/orders", orderJson(asJsonString(items(scarf, 1)), firstPayment, ""))
+                .andExpect(status().isOk());
+        assertEquals(0, stockOf(scarf));
+
+        send(second, "/api/orders", orderJson(asJsonString(items(scarf, 1)), secondPayment, ""))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Scarf is sold out. Please remove it from your bag."));
+        assertEquals(0, stockOf(scarf));
+        assertEquals(null, paymentRepository.findById(secondPayment).orElseThrow().getOrderId());
+
+        mockMvc.perform(get("/admin/products/" + scarf))
+                .andExpect(jsonPath("$.availability").value("out-of-stock"))
+                .andExpect(jsonPath("$.stock").value(0));
+    }
+
+    @Test
+    void aRefusedOrderLeavesStockUntouched() throws Exception {
+        Account customer = account();
+        long scarf = productWithStock("Scarf", 500.0, 5);
+        long paymentForOne = cashPayment(customer, items(scarf, 1));
+
+        // Paid for one, orders two: refused, and nothing is taken from stock.
+        send(customer, "/api/orders", orderJson(asJsonString(items(scarf, 2)), paymentForOne, ""))
+                .andExpect(status().isConflict());
+
+        assertEquals(5, stockOf(scarf));
+    }
+
+    @Test
+    void productsWithoutAStockFigureNeverSellOut() throws Exception {
+        Account customer = account();
+
+        send(customer, "/api/orders/quote", "{\"items\":" + items(cheapId, 99) + "}").andExpect(status().isOk());
+        mockMvc.perform(get("/admin/products/" + cheapId))
+                .andExpect(jsonPath("$.availability").value("in-stock"));
+    }
 }

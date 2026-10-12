@@ -286,7 +286,11 @@ const ProductDetailPage = () => {
                 </span>
               )}
               <span className="ml-auto text-[10px] tracking-label uppercase text-black/40">
-                {outOfStock ? 'Sold Out' : 'In Stock'}
+                {outOfStock
+                  ? 'Sold Out'
+                  : product.stock != null && product.stock <= 5
+                    ? `Only ${product.stock} left`
+                    : 'In Stock'}
               </span>
             </div>
 

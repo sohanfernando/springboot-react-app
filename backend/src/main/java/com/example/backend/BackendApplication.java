@@ -2,11 +2,13 @@ package com.example.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
 
 @SpringBootApplication
+@EnableScheduling
 public class BackendApplication {
 
     public static void main(String[] args) {
@@ -14,10 +16,17 @@ public class BackendApplication {
         SpringApplication.run(BackendApplication.class, args);
     }
 
+    /**
+     * Local development only. The file lives beside pom.xml, deliberately
+     * outside src/main/resources: anything in there is copied into the jar,
+     * which would ship the secrets with the build. In production there is no
+     * file and real environment variables are used instead.
+     */
     private static void loadDotEnv() {
-        File envFile = new File("src/main/resources/.env");
+        // Started from backend/ (mvnw) or from the repository root (some IDEs).
+        File envFile = new File(".env");
         if (!envFile.exists()) {
-            envFile = new File(".env");
+            envFile = new File("backend/.env");
         }
         if (envFile.exists()) {
             try {
@@ -37,7 +46,10 @@ public class BackendApplication {
                         } else if (value.startsWith("'") && value.endsWith("'")) {
                             value = value.substring(1, value.length() - 1);
                         }
-                        System.setProperty(key, value);
+                        // A blank entry means "not set", so the default applies.
+                        if (!value.isEmpty()) {
+                            System.setProperty(key, value);
+                        }
                     }
                 }
             } catch (Exception e) {

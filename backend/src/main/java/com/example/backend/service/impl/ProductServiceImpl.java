@@ -4,8 +4,10 @@ import com.example.backend.model.Product;
 import com.example.backend.repository.ProductRepository;
 import com.example.backend.service.ProductService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +43,7 @@ public class ProductServiceImpl implements ProductService {
                 throw new RuntimeException("Description cannot exceed 200 words.");
             }
         }
+        requireValidStock(product.getStock());
         List<String> imageUrls = saveImages(images);
         product.setImages(imageUrls);
         product.setImageColors(
@@ -59,6 +62,8 @@ public class ProductServiceImpl implements ProductService {
         product.setName(updated.getName());
         product.setDescription(updated.getDescription());
         product.setPrice(updated.getPrice());
+        requireValidStock(updated.getStock());
+        product.setStock(updated.getStock());
         product.setCategory(updated.getCategory());
         product.setSubcategory(updated.getSubcategory());
         product.setColors(updated.getColors());
@@ -182,6 +187,13 @@ public class ProductServiceImpl implements ProductService {
             }
         }
         return assigned;
+    }
+
+    /** Null is allowed and means the product's stock is not tracked. */
+    private void requireValidStock(Integer stock) {
+        if (stock != null && stock < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stock cannot be negative.");
+        }
     }
 
     private boolean isUsableColor(String color, Set<String> validColors) {
